@@ -16,7 +16,7 @@ public:
                     int flush_interval = 3, int check_every_n = 1024);
     ~LogFile();
     LogFile(const LogFile &) = delete;
-    LogFile operator= (const LogFile &) = delete;
+    LogFile & operator= (const LogFile &) = delete;
 
     void Append(const char * logline, int len);
     void Flush();

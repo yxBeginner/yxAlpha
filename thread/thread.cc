@@ -37,7 +37,7 @@ struct ThreadData {
         
     }
 
-    void runInThread() {
+    void RunInThread() {
         // CureentThread::t_tid = *tid_;  // TODO 不妥
         CureentThread::t_tid = (static_cast<tid_t> (pthread_self()));
         CureentThread::t_name = name_.c_str();
@@ -48,7 +48,7 @@ struct ThreadData {
 // 线程入口函数, 执行客户定义的 function
 void * startRoutine(void * arg) {
     ThreadData *data = static_cast<ThreadData *> (arg);
-    data->runInThread();
+    data->RunInThread();
     delete data;
     return NULL;  // exit
 }
@@ -93,7 +93,7 @@ void Thread::Join() {
     assert(started_);
     assert(!joined_);
     joined_ = true;
-    pthread_join(thread_id_, NULL);
+    pthread_join(thread_id_, NULL);  // 创建者对本线程对象内的线程 join
 }
 
 }  // namespace yxalp

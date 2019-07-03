@@ -1,5 +1,20 @@
 
+## 设计
 
+### threadpool
+一个单生产者-多消费者模式的线程池.
+
+使用 function/bind 处理用户任务以及线程对象.
+
+线程池处于未激活状态下, 则由任务添加者自己运行任务.
+
+任务队列使用了一个 deque, 跨线程对象, pop/push 使用 mutex 保护. 两个条件变量 cond_full_ 与 cond_empty_ 分别表示队列的空与满状态. 这是一个阻塞队列.
+
+条件变量 cond_empty_ 有两个用途:
+1. 标识任务队列是否为空. queue_ 为空时, 工作线程会阻塞在该条件变量上, 由生产者添加新任务后进行 signal.
+2. 线程池 stop 时, 需要 notifyAll 阻塞在 cond_empty_ 上的消费者线程, 此时任务队列为空, 不能pop_front(), 工作线程会得到一个空 function 对象.
+
+stop时, 不管任务队列中还有没有任务, 直接退出, 回收所有 worker threads.
 
 ## 组件
 

@@ -1,8 +1,8 @@
 CXXFLAGS = -O0 -g  -Wall -I ../.. -pthread
 LDFLAGS = -lpthread
-BINARIES = test1 test2
+BINARIES = test1.out test2.out test3.out test4.out
 
-SRC = ../thread.cc
+SRC = ../thread.cc  ../threadpool.cc
 all: $(BINARIES)
 
 $(BINARIES):
@@ -11,5 +11,7 @@ $(BINARIES):
 clean:
 	rm -f $(BINARIES) core
 
-test1: test1.cc
-test2: test2.cc
+test1.out: test1.cc
+test2.out: test2.cc
+test3.out: test3.cc
+test4.out: test4.cc

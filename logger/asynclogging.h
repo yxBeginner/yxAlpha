@@ -23,7 +23,7 @@ public:
     }
 
     AsyncLogging(const AsyncLogging &) = delete;
-    AsyncLogging operator=(const AsyncLogging &) =delete;
+    AsyncLogging & operator=(const AsyncLogging &) =delete;
 
     // 前端写, thread safe
     void Append(const char* logline, size_t len);
