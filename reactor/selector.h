@@ -17,12 +17,9 @@ using std::map;
 
 class EventHandler;
 
-// Selector 缓存 pollfds, 与 Dispatcher 一对一
 class Selector {
 public:
     enum { ADD = 0, DEL, MOD };
-    // Selector() = default;
-    // ~Selector()  = default;
     Selector(); 
     ~Selector();
     Selector & operator=(const Selector &) = delete;

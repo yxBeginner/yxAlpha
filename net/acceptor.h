@@ -22,7 +22,7 @@ public:
     void set_new_connection_callback(const NewConnectionCallback& cb)
     { newConnectionCallback_ = cb; }
 
-    // bool listenning() const { return listenning_; }
+    bool is_listenning() const { return listenning_; }
     void Listen();
 
 private:
@@ -32,7 +32,7 @@ private:
     Socket server_socket_;
     EventHandler event_handler_;
     NewConnectionCallback newConnectionCallback_;
-    // bool listenning_;
+    bool listenning_;
 };
 
 }  // namespace yxalp

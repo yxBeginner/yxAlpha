@@ -10,6 +10,7 @@
 
 namespace yxalp {
 
+LogNothing log_nothing;
 static pthread_once_t once_ = PTHREAD_ONCE_INIT;
 static AsyncLogging *async_logger_;  // Singleton
 

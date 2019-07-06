@@ -4,10 +4,10 @@
 #include <sys/eventfd.h>
 #include <unistd.h>
 #include <cassert>
-// #include <iostream>  // debug
 
 #include "selector.h"
 #include "eventhandler.h"
+#include "logger/logging.h"
 
 namespace yxalp {
 
@@ -15,7 +15,7 @@ namespace yxalp {
 static int CreateEventFd() {
     int fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     if (fd < 0) {
-        // log error
+        LOG << "CreateEventFd() : Error " << fd;
         abort();  // dump
     }
     return fd;
@@ -32,12 +32,13 @@ Dispatcher::Dispatcher()
       wakeup_handler_(std::make_unique<EventHandler> (wakeup_fd_, this)),
       mutex_(),
       pending_funcs_() {
-    // log init loop
+    LOG << "Dispatcher::Dispatcher() : Constructor.";
     wakeup_handler_->set_read_func(std::bind(&Dispatcher::HandleRead, this));
     wakeup_handler_->set_care_read();
 }
 
 Dispatcher::~Dispatcher() {
+    LOG << "Dispatcher::Dispatcher() : Destructor.";
     assert(!looping_);
     close(wakeup_fd_);
 }
@@ -51,35 +52,49 @@ void Dispatcher::Quit() {
 }
 
 void Dispatcher::RegisterEventHandler(EventHandler * ehandler) {
-    // std::cout << "epoll in add " << ehandler->fd()<< std::endl;
+    LOG << "Dispatcher::RegisterEventHandler : epoll in add : " << ehandler->fd();
     // std::cout << "epoll in add " << ehandler->events() << std::endl;    
     selector_->UpdataOneEventHandler(Selector::ADD, ehandler);
 }
 
 void Dispatcher::RemoveEventHandler(EventHandler * ehandler) {
+    LOG << "Dispatcher::RemoveEventHandler : epoll in delete : " << ehandler->fd();
     selector_->UpdataOneEventHandler(Selector::DEL, ehandler);
 }
 
 void Dispatcher::UpdateEventHandler(EventHandler * ehandler) {
+    LOG << "Dispatcher::UpdateEventHandler : epoll in modify : " << ehandler->fd();
     selector_->UpdataOneEventHandler(Selector::MOD, ehandler);
+}
+
+void Dispatcher::AssertInLoopThread() {
+    if (!is_same_thread()) {
+        LOG << "Dispatcher::AssertInLoopThread() : threadId : " << tid_
+                  << " Current thread id : " << CureentThread::tid()
+                  << " with name : " << CureentThread::name();
+        abort();
+    }
 }
 
 void Dispatcher::Loop() {
     assert(!looping_);  // Loop 开始
+    AssertInLoopThread();
     assert(!quit_);
     looping_ = true;
     quit_ = false;
     while (!quit_) {
-        event_handler_list_.clear();  // C11 会释放空间
-        selector_->Select(kEpollTimeOut, &event_handler_list_); 
-            // std::cout << " have active ? " << event_handler_list_.empty() << std::endl;
+        event_handler_list_.clear();  // C11 释放空间
+        selector_->Select(kEpollTimeOut, &event_handler_list_);
+        LOG << "Dispatcher::Loop() : one round epoll" 
+                  << " have active ? " << event_handler_list_.empty();
         for (auto it = event_handler_list_.cbegin(); it != event_handler_list_.cend(); ++it) {
             // std::cout << "active" << &it << std::endl;
             (*it)->HandleEvent();
         }
-        ExecutePendingFuncs();  // 执行用户任务回调
+        ExecutePendingFuncs();  // 执行异步用户任务回调
     }
-    // log everthing
+    LOG << "Dispatcher::Loop() : start looping in thread id : " << tid_
+              << " with name : " << CureentThread::name();
     looping_ = false;
 }
 
@@ -108,18 +123,20 @@ void Dispatcher::Wakeup() {
     const char *wakeup_buf {"wake up"};
     ssize_t ret = write(wakeup_fd_, &wakeup_buf, sizeof(wakeup_buf));
     if (ret < 0) {
-        // log error
+        LOG << "Dispatcher::Wakeup()  : write eventfd error thread id : " << tid_
+                  << " with name : " << CureentThread::name();
     }
 }
 
 // 读出 wakeup 时写入的一个字节, EventHandler 的回调函数
-// 不在 wakeup 的HandleRead 中处理 Functors
+// 不在 wakeup 的 HandleRead 中处理 Functors
 void Dispatcher::HandleRead() {
     char wakeup_buf[8];
     // eventfd_read()
     ssize_t ret = read(wakeup_fd_, &wakeup_buf, sizeof(wakeup_buf));
     if (ret < 0) {
-        // log error
+        LOG << "Dispatcher::HandleRead()  : read eventfd error thread id : " << tid_
+                  << " with name : " << CureentThread::name();
     }
 }
 

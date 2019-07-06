@@ -2,6 +2,7 @@
 #define YXALPHA_CONDITION_H_
 
 #include <time.h>
+#include <errno.h>
 
 #include "mutex.h"
 

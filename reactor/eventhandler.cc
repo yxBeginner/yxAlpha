@@ -2,8 +2,8 @@
 #include "eventhandler.h"
 
 #include <sys/epoll.h>
-// #include <iostream>  // debug
 #include "dispatcher.h"
+#include "logger/logging.h"
 
 namespace yxalp {
 
@@ -12,7 +12,8 @@ const int EventHandler::kRead = EPOLLIN;  // level trigger
 const int EventHandler::kWrite = EPOLLOUT;
 
 EventHandler::EventHandler(int fd, Dispatcher  *dp)
-    : read_func_(nullptr),
+    : event_handling_(false),
+      read_func_(nullptr),
       write_func_(nullptr),
       error_func_(nullptr),
       fd_(fd),
@@ -24,7 +25,9 @@ EventHandler::EventHandler(int fd, Dispatcher  *dp)
 }
 
 EventHandler::~EventHandler() {
-    dispatcher_->RemoveEventHandler(this);
+    assert(!event_handling_);  // 只有所有回调执行完毕后, 才能析构
+    LOG << "EventHandler::~EventHandler() : "  << fd_;
+    // dispatcher_->RemoveEventHandler(this);
 }
 
 void EventHandler::change_interest() {
@@ -32,19 +35,23 @@ void EventHandler::change_interest() {
 }
 
 void EventHandler::HandleEvent() {
+    // HandleEvent 过程中, 整个回调栈中不可以析构本对象
+    event_handling_ = true;
     // std::cout << "HandleEvent" << std::endl;
-    // // POLLNVAL 指定描述符非法
-    // if (revents_ & EPOLLNVAL) {
-    //     // log
-    // }
-    if (revents_ & (EPOLLERR)) {
-        if (error_func_) {
-            error_func_();
-        } else {
-            // log
+    // peer 关闭 && 无数据可读
+    if ((revents_ & (EPOLLHUP)) && !(revents_ & EPOLLIN )) {
+        LOG << "EventHandler::HandleEvent()  EPoll HUP";
+        if (close_func_) {
+            close_func_();
         }
     }
-    // 可读 | 急迫数据可读 | ?
+    if (revents_ & (EPOLLERR)) {
+        LOG << "EventHandler::HandleEvent()  EPoll Error";
+        if (error_func_) {
+            error_func_();
+        } else {}
+    }
+    // 可读 | 急迫数据可读(带外数据) | 关闭/半关闭
     if (revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
         // std::cout << "handle read" << std::endl;
         if (read_func_) {
@@ -61,6 +68,7 @@ void EventHandler::HandleEvent() {
             // log
         }
     }
+    event_handling_ = false;
 }
 
 };  // namespace yxalp

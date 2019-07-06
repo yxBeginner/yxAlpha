@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "inetaddr.h"
+#include "logger/logging.h"
 
 namespace yxalp {
 
@@ -13,8 +14,8 @@ static int CreateServerSocket() {
     int server_fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 
                                               IPPROTO_TCP);
     if (server_fd < 0) {
-        // log error in create server socket.
-        // abort();
+        LOG << "Error in creating server socket.";
+        abort();
     }
     return server_fd;
 }
@@ -28,7 +29,10 @@ Acceptor::Acceptor(Dispatcher *dispatcher, const InetAddr &addr)
     event_handler_.set_read_func(std::bind(&Acceptor::EventHandlerCallBack, this));
 }
 
+Acceptor::~Acceptor() {}
+
 void Acceptor::Listen() {
+    listenning_ = true;
     server_socket_.Listen();
     event_handler_.set_care_read();
 }

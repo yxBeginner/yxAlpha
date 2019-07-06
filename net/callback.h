@@ -15,7 +15,8 @@ typedef std::shared_ptr<TcpConnection> TcpConnectionPtr;
 typedef std::function<void (const TcpConnectionPtr&)> ConnectionCallback;
 // 收到新消息后, 执行该回调函数.
 typedef std::function<void (const TcpConnectionPtr&, const char* data, ssize_t len)> MessageCallback;
-
+// 对端 close 的回调函数
+typedef std::function<void (const TcpConnectionPtr &)> CloseCallBack;
 }  // namespace yxalp
 
 #endif  // YXALPHA_CALLBACK_H_
