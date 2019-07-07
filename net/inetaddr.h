@@ -2,7 +2,6 @@
 #ifndef YXALPHA_INETADDR_H_
 #define YXALPHA_INETADDR_H_
 
-// #include<arpa/inet.h>
 #include <netinet/in.h>
 #include <string>
 
@@ -22,6 +21,12 @@ public:
 
     const struct sockaddr_in & get_addr() const { return addr_; }
     void set_addr(const struct sockaddr_in &addr) { addr_ = addr; };
+    std::string get_iner_host_port() const;
+
+    // get host:port from struct sockaddr_in
+    static void get_host_port(char *buf, size_t len, const struct sockaddr_in &addr);
+    // set host:port to struct sockaddr_in
+    static void set_host_port(const char *p, uint16_t port, struct sockaddr_in &addr);
 private:
     struct sockaddr_in addr_;
 };

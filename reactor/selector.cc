@@ -95,8 +95,7 @@ void Selector::AddEvent(EventHandler * eh) {
     struct epoll_event e_event;
     bzero(&e_event, sizeof(struct ::epoll_event));
     int fd = eh->fd();
-    LOG << "Selector::AddEvent : fd : " << fd 
-              << " address : " << &eh; 
+    DLOG << "Selector::AddEvent : fd : " << fd;
     e_event.data.fd = fd;
     e_event.data.ptr = static_cast<void *> (eh);  // 使用 ptr 保存其所在 EventHandler
     e_event.events = eh->events();
@@ -113,8 +112,7 @@ void Selector::DeleteEvent(EventHandler * eh) {
     struct epoll_event e_event;
     bzero(&e_event, sizeof(struct ::epoll_event));
     int fd = eh->fd();
-    LOG << "Selector::DeleteEvent : fd : " << fd 
-              << " address : " << &eh;
+    DLOG << "Selector::DeleteEvent : fd : " << fd;
     e_event.data.fd = fd;
     e_event.data.ptr = static_cast<void *> (eh);
     e_event.events = eh->events();
@@ -129,8 +127,7 @@ void Selector::ModifyEvent(EventHandler * eh) {
     struct epoll_event e_event;
     bzero(&e_event, sizeof(struct ::epoll_event));
     int fd = eh->fd();  // 将此项设置为 -1, 可以让 epoll 暂时忽略该 fd 吗? poll 可以.
-    LOG << "Selector::ModifyEvent : fd : " << fd 
-              << " address : " << &eh;
+    DLOG << "Selector::ModifyEvent : fd : " << fd;
     e_event.data.fd = fd;
     e_event.data.ptr = static_cast<void *> (eh);
     e_event.events = eh->events();

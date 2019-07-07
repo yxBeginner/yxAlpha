@@ -8,8 +8,9 @@
 
 #include "logstream.h"
 
-// disable 这两个宏的状态下, async log 线程不会静默启动
+// disable 这 3 个宏的状态下, async log 线程不会静默启动
 #define ENABLE_LOG
+#define DEBUGLOG
 #define STDLOG
 
 namespace yxalp {
@@ -69,18 +70,28 @@ extern LogNothing log_nothing;
 
 }  // namespace yxalp
 
-// TODO log 设置不同后端
-// #define LOG std::cout << std::endl
-
+// TODO log 设置不同后端(better way)
 #ifdef ENABLE_LOG
-    #ifdef STDLOG
-        #define LOG std::cout << std::endl
+    #define LOG yxalp::Logger(__FILE__, __LINE__).Stream()
+    #ifdef DEBUGLOG
+        #define DLOG yxalp::Logger(__FILE__, __LINE__).Stream()
     #else
-        #define LOG yxalp::Logger(__FILE__, __LINE__).Stream()
+        #define DLOG yxalp::log_nothing
     #endif
 #else
-        #define LOG yxalp::log_nothing
+    #define DLOG yxalp::log_nothing
+    #define LOG yxalp::log_nothing
 #endif
+
+// #ifdef ENABLE_LOG
+//     #ifdef STDLOG
+//         #define LOG std::cout << std::endl
+//     #else
+//         #define LOG yxalp::Logger(__FILE__, __LINE__).Stream()
+//     #endif
+// #else
+//         #define LOG yxalp::log_nothing
+// #endif
 
 // #define LOG if(LOG_ENABLE) 
 // yxalp::Logger(__FILE__, __LINE__).Stream()

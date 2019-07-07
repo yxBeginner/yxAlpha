@@ -4,24 +4,25 @@
 #include <stdio.h>
 
 void onConnection(const yxalp::TcpConnectionPtr& conn) {
+    // printf("onConnection(): shared ptr holder : %ld \n", conn.use_count());
+    // yxalp::TcpConnectionPtr local_ptr = conn;
     if (conn->is_connected()) {
         printf("onConnection(): new connection [%s] from\n",
-            conn->name().c_str());
+            conn->get_name().c_str());
             // conn-> ->peerAddress().toHostPort().c_str());
     } else {
         printf("onConnection(): connection [%s] is down\n",
-            conn->name().c_str());
+            conn->get_name().c_str());
     }
 }
 
 void onMessage(const yxalp::TcpConnectionPtr& conn,
                                     const char* data, ssize_t len) {
   printf("onMessage(): received %zd bytes from connection [%s]\n",
-         len, conn->name().c_str());
+         len, conn->get_name().c_str());
 }
 
 int main() {
-//   printf("main(): pid = %d\n", getpid());
     yxalp::InetAddr server_addr(12345);
     yxalp::Dispatcher dispatcher;
     

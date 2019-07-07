@@ -13,7 +13,8 @@ class Dispatcher;
 class EventHandler;
 class Socket;
 
-class TcpConnection : std::enable_shared_from_this<TcpConnection> {
+// 管理一个"已经建立"的连接
+class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 public:
     TcpConnection(Dispatcher *dispatcher, Socket &&socket, 
                                      const InetAddr &addr, const std::string &conn_name);
@@ -21,22 +22,22 @@ public:
     TcpConnection& operator=(const TcpConnection &) = delete;
     TcpConnection(const TcpConnection &) = delete;
 
-    const std::string & name() { return conn_name_; }
+    const std::string & get_name() { return conn_name_; }
+    const InetAddr & get_addr() { return addr_; }
     bool is_connected() const { return state_ == CONNECTED; }
 
     // 用户与 TCPServer 都可以设置 CallBack
-    void set_connection_call_back(const ConnectionCallback &cb) 
+    void set_connection_call_back(const ConnectionCallback &cb)
     { connection_call_back_ = cb; }
     void set_message_call_back(const MessageCallback &cb)
     { message_call_back_ = cb; }
-    // 连接已建立, 只应该由 server 设置.
-    void set_connection_established();
-    // 连接已断开, 此时TCPServer 与 TcpClient "已经"移除自己持有的对象
-    void set_connection_destroyed();
-
     // 内部使用, 只应该由 server 调用删除
     void set_close_call_back(const CloseCallBack & cb)
     { close_call_back_ = cb; }
+    // 连接已建立, 只应该由 server 设置. 会直接设置监听状态, 并回调用户函数
+    void set_connection_established();
+    // 连接已断开, 此时TCPServer 与 TcpClient "已经"移除自己持有的对象
+    void set_connection_destroyed();
 
 private:
     enum ConnState {CONNECTING, CONNECTED, DISCONNECTED};

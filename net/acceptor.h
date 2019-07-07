@@ -7,8 +7,6 @@
 
 namespace yxalp {
 
-// 基于对象风格, Acceptor 本身是一个 EventHandler + server socket
-// 所以使用了二者的一部分功能, 重写了一部分功能
 class Acceptor {
 public:
     // typedef std::function<void (int socket, const InetAddr &)> NewConnectionCallback;
@@ -18,7 +16,7 @@ public:
     ~Acceptor();
     Acceptor & operator=(const Acceptor &) = delete;
     Acceptor(const Acceptor &) = delete;
-
+    // For TcpServer 
     void set_new_connection_callback(const NewConnectionCallback& cb)
     { newConnectionCallback_ = cb; }
 

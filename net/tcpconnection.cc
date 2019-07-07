@@ -23,15 +23,23 @@ TcpConnection::TcpConnection(Dispatcher *dispatcher, Socket &&socket,
       message_call_back_(nullptr) {
     
     event_handler_->set_read_func(std::bind(&TcpConnection::HandleRead, this));  // 设置 Handler 上的 CallBack
+    event_handler_->set_write_func(std::bind(&TcpConnection::HandleWrite, this));
+    event_handler_->set_error_func(std::bind(&TcpConnection::HandleWrite, this));
+    event_handler_->set_close_func(std::bind(&TcpConnection::HandleWrite, this));
+    DLOG << "TcpConnection::TcpConnection : fd " << socket_->fd() 
+                 << "name : " << conn_name_.c_str();
 }
 
 TcpConnection::~TcpConnection() {
     // log close, 注意 socket 才是真正管理 fd 的
-    LOG << "TcpConnection::~TcpConnection(), fd : " << socket_->fd();
+    DLOG << "TcpConnection::~TcpConnection(), fd : " << socket_->fd()
+              << "name : " << conn_name_.c_str();
 }
 
 void TcpConnection::set_connection_established() {
-    // log ?
+    dispatcher_->AssertInLoopThread();  // IO thread
+    DLOG << "Enter TcpConnection::set_connection_established(), fd : " << socket_->fd()
+              << " name : " << conn_name_.c_str();
     assert(state_ == CONNECTING);
     state_ = CONNECTED;
     event_handler_->set_care_read();
@@ -39,6 +47,9 @@ void TcpConnection::set_connection_established() {
 }
 
 void TcpConnection::set_connection_destroyed() {
+    dispatcher_->AssertInLoopThread();
+    DLOG << "TcpConnection::set_connection_destroyed(), fd : " << socket_->fd()
+              << "name : " << conn_name_.c_str();
     assert(state_ == CONNECTED);
     state_ =  DISCONNECTED;
     event_handler_->set_stop_care_all();  // 没有维持半关闭状态 TODO
@@ -48,6 +59,8 @@ void TcpConnection::set_connection_destroyed() {
 }
 
 void TcpConnection::HandleRead() {
+    DLOG << "TcpConnection::HandleRead(), fd : " << socket_->fd()
+              << "name : " << conn_name_.c_str();
     char buf[65536];
     ssize_t n = ::read(event_handler_->fd(), buf, sizeof buf);
     if (n > 0) {
@@ -79,8 +92,10 @@ void TcpConnection::HandleError() {
 }
 
 // 不能在此直接销毁自身, 解注册 Dispatcher, 需要回调 TCPServer 的 close
+// server 上持有本对象的 shared_ptr
 void TcpConnection::HandleClose() {
-    LOG << "TcpConnection::HandleClose(), fd" << socket_->fd() 
+    LOG << "TcpConnection::HandleClose(), fd" << socket_->fd()
+              << "name : " << conn_name_.c_str()
               << " with state: " << state_;
     assert(state_ == CONNECTED);
     // 不在关注任何事件, 执行完 server 的回调之后, 本对象将不复存在
@@ -89,5 +104,3 @@ void TcpConnection::HandleClose() {
 }
 
 } // namespace yxalp
-
-

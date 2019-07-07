@@ -52,24 +52,24 @@ void Dispatcher::Quit() {
 }
 
 void Dispatcher::RegisterEventHandler(EventHandler * ehandler) {
-    LOG << "Dispatcher::RegisterEventHandler : epoll in add : " << ehandler->fd();
+    DLOG << "Dispatcher::RegisterEventHandler : epoll in add : " << ehandler->fd();
     // std::cout << "epoll in add " << ehandler->events() << std::endl;    
     selector_->UpdataOneEventHandler(Selector::ADD, ehandler);
 }
 
 void Dispatcher::RemoveEventHandler(EventHandler * ehandler) {
-    LOG << "Dispatcher::RemoveEventHandler : epoll in delete : " << ehandler->fd();
+    DLOG << "Dispatcher::RemoveEventHandler : epoll in delete : " << ehandler->fd();
     selector_->UpdataOneEventHandler(Selector::DEL, ehandler);
 }
 
 void Dispatcher::UpdateEventHandler(EventHandler * ehandler) {
-    LOG << "Dispatcher::UpdateEventHandler : epoll in modify : " << ehandler->fd();
+    DLOG << "Dispatcher::UpdateEventHandler : epoll in modify : " << ehandler->fd();
     selector_->UpdataOneEventHandler(Selector::MOD, ehandler);
 }
 
 void Dispatcher::AssertInLoopThread() {
     if (!is_same_thread()) {
-        LOG << "Dispatcher::AssertInLoopThread() : threadId : " << tid_
+        DLOG << "Dispatcher::AssertInLoopThread() : threadId : " << tid_
                   << " Current thread id : " << CureentThread::tid()
                   << " with name : " << CureentThread::name();
         abort();
@@ -86,14 +86,14 @@ void Dispatcher::Loop() {
         event_handler_list_.clear();  // C11 释放空间
         selector_->Select(kEpollTimeOut, &event_handler_list_);
         LOG << "Dispatcher::Loop() : one round epoll" 
-                  << " have active ? " << event_handler_list_.empty();
+                  << " have active ? " << !event_handler_list_.empty();
         for (auto it = event_handler_list_.cbegin(); it != event_handler_list_.cend(); ++it) {
             // std::cout << "active" << &it << std::endl;
             (*it)->HandleEvent();
         }
         ExecutePendingFuncs();  // 执行异步用户任务回调
     }
-    LOG << "Dispatcher::Loop() : start looping in thread id : " << tid_
+    LOG << "Dispatcher::Loop() : stop looping in thread id : " << tid_
               << " with name : " << CureentThread::name();
     looping_ = false;
 }

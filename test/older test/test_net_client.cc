@@ -15,7 +15,7 @@ int main(){
     serv_addr.sin_port = htons(12345);
     char buffer[BUF_SIZE] = {"I do not know."};
     char buf_return[BUF_SIZE];
-    while (1) {
+    // while (1) {
         int sock = socket(AF_INET, SOCK_STREAM, 0);
         int check = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
         printf("connect state: %d\n", check);  //'check' --> Return 0 on success, -1 for errors
@@ -25,11 +25,11 @@ int main(){
         printf("Sending : %s\n with len %d\n", buffer, strlen(buffer));
         send(sock, buffer, strlen(buffer), 0);
         sleep(3);
-        recv(sock, buf_return, BUF_SIZE, 0);
+        // recv(sock, buf_return, BUF_SIZE, 0);
         // read(sock, buffer, sizeof(buffer)-1);
-        printf("Message form server: %s\n", buf_return);
+        // printf("Message form server: %s\n", buf_return);
         close(sock);
-    }
+    // }
     return 0;
 }
 

@@ -50,9 +50,13 @@ Logger::Logger(const char *file_name, int line)
 Logger::~Logger() {
 #ifdef ENABLE_LOG
     impl_.stream_ << " -- " << impl_.base_name_.c_str() << ':' << impl_.line_ << '\n';
-    pthread_once(&once_, Init_);
     const LogStream::Buffer &buffer(Stream().get_buffer());
-    async_logger_->Append(buffer.get_data(), buffer.current_length());
+    #ifdef STDLOG
+        std::cout << buffer.get_data() << std::endl;
+    #else
+        pthread_once(&once_, Init_);
+        async_logger_->Append(buffer.get_data(), buffer.current_length());
+    #endif
 #endif
 }
 
