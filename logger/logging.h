@@ -11,7 +11,7 @@
 // disable 这 3 个宏的状态下, async log 线程不会静默启动
 #define ENABLE_LOG
 #define DEBUGLOG
-#define STDLOG
+// #define STDLOG
 
 namespace yxalp {
 

@@ -1,3 +1,16 @@
 # Yxalp
 一个基于 Reactor 模式的网络库, 仿照 [muduo](https://github.com/chenshuo) 而写.
-目前完成了 Reactor 结构的封装, 一部分线程功能的封装, 基本的 Tcp 连接的封装与 Tcp 连接断开以及日志系统. There is still a long way to go.
+
+## 组件
+* [logger](./logger) : 基于写回策略. 后端线程周期性的唤醒, 或者在前端 log 数据量巨大的时候被主动唤醒, 将 buffer 中的数据刷出到磁盘上.
+* [net](./net) : 对网络连接的封装, 目前被动建立连接部分已经完成.
+* [reactor](./reactor) : non-blocking IO + IO multipleing 模式, 基于事件编程的核心.
+* [test](./test) 一些整体测试.
+* [thread](./thread) RAII 封装的互斥锁设施以及相关部件. 实现了线程对象以及任务队列形式的线程池.
+* [time](./time) 时间戳相关组件, 暂未完成.
+* [utility](./utility) 额外的功能部件.
+
+更多详细信息可点击到相应目录中查看.
+
+*******
+ There is still a long way to go.

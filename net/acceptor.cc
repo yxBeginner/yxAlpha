@@ -25,7 +25,7 @@ Acceptor::Acceptor(Dispatcher *dispatcher, const InetAddr &addr)
     : dispatcher_(dispatcher),
       server_socket_(CreateServerSocket()),
       event_handler_(server_socket_.fd(), dispatcher_) {
-    server_socket_.enable_reuse_addr();
+    // server_socket_.enable_reuse_addr();
     server_socket_.Bind(addr);
     event_handler_.set_read_func(std::bind(&Acceptor::EventHandlerCallBack, this));
     DLOG << "Acceptor::Acceptor() : Constructor";

@@ -46,7 +46,7 @@ static void epoll_err (int err) {
 
 void Selector::Select(int timeout, vector<EventHandler*> *handlers) {
     int ret = epoll_wait(epollfd_, e_events_.data(), static_cast<int>(e_events_.size()), timeout);
-    LOG << "Selector::Select () : active nums : " << ret;
+    DLOG << "Selector::Select () : active nums : " << ret;
     if (ret > 0) {  // triggered
         if (static_cast<size_t> (ret) == e_events_.size()) {  // TODO 缩小动作
             e_events_.resize(e_events_.size() * 2);  // 这种扩容方法在水平触发下才可以
@@ -55,7 +55,7 @@ void Selector::Select(int timeout, vector<EventHandler*> *handlers) {
     } else if (ret == -1) {
         epoll_err(errno);  // other
     } else {
-        LOG << "Selector::Select() : nothing happened";
+        DLOG << "Selector::Select() : nothing happened";
     }
 }
 

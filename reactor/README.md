@@ -11,13 +11,15 @@ non-blocking IO + IO multipleing
 
 ### Event Handler
 事件处理器，其会定义一些回调方法 (钩子函数)，当所管理的 fd 上有事件发生时，回调方法便会执行(由 Dispatcher 回调)，一种事件处理机制.
-EventHandler 定义事件处理方法 HandleEvent()，以供 Dispatcher 回调使用。经由若干 set 方法设置客端回调, 并可改变监听状态 (一个 Channel).
-每个 EventHandler 只隶属于一个 IO 线程, 非跨线程. 并且不管理 fd 的生命周期. 作为 Acceptor / TCPConnection 等的成员.
-EventHanlder 不用于派生 Concrete EventHandler, 而是通过设置 function 的方式提供多态
+* EventHandler 定义事件处理方法 HandleEvent()，以供 Dispatcher 回调使用。经由若干 set 方法设置客端回调, 并可改变监听状态 (一个 Channel).
+* 每个 EventHandler 只隶属于一个 IO 线程, 非跨线程. 并且不管理 fd 的生命周期. 作为 Acceptor/TCPConnection/Dispatcher 的成员.
+* EventHanlder 不用于派生 Concrete EventHandler, 而是通过设置回调函数的方式提供多态, 这是基于对象风格?
+* 构造 EventHandler 后, 需要注册调用者的Dispatcher, 以便 EventHandler 到 相应的 Dispatcher 上改变自己关心的事件. 考虑到 Dispatcher 不会正常退出, 那么这个引用是安全的.
 
 ### Selector
-所谓的 Synchronous Event Demultiplexer, 也即 IO multiplexing 的核心, 内部使用 epoll LT 实现. 与 Dispatcher 为一对一的关系. Selector 缓存 epoll_wait 返回的 fd 数组, 进行错误处理, 然后扫描设置 EventHandler 上的事件. 并将 fd(EventHandler) 数组返还 Dispatcher 进一步处理.
-此外封装了 ADD/DEL/MOD 等动作.
+所谓的 Synchronous Event Demultiplexer, 也即 IO multiplexing 的核心, 内部使用 epoll LT 实现. 与 Dispatcher 为一对一的关系.
+*  Selector 缓存 epoll_wait 返回的被激活的 fd 数组, 进行错误处理, 然后扫描并设置 EventHandler 上的激活事件(但并不直接调用 EventHandler 上的回调). 并将 fd(EventHandler) 数组返还 Dispatcher 进一步处理.
+* 此外封装了 ADD/DEL/MOD 等动作.
 
 ### Dispatcher
 分发器，整个 Reactor 结构的交汇处，提供了注册、删除与转发EventHandler的方法。

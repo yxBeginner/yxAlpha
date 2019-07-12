@@ -1,7 +1,7 @@
-// 更新了 buffer 相关, 该测试失效
 #include "../net/tcpserver.h"
 #include "../reactor/dispatcher.h"
 #include "../net/inetaddr.h"
+#include "../utility/buffer.h"
 #include <stdio.h>
 
 void onConnection(const yxalp::TcpConnectionPtr& conn) {
@@ -17,10 +17,10 @@ void onConnection(const yxalp::TcpConnectionPtr& conn) {
     }
 }
 
-void onMessage(const yxalp::TcpConnectionPtr& conn,
-                                    const char* data, ssize_t len) {
-  printf("onMessage(): received %zd bytes from connection [%s], content: %s\n",
-         len, conn->get_name().c_str(), data);
+void onMessage(const yxalp::TcpConnectionPtr& conn, yxalp::Buffer *buffer) {
+    size_t data_size = buffer->payload_size();
+    printf("onMessage(): received %zd bytes from connection [%s], content: %s\n",
+        data_size, conn->get_name().c_str(), buffer->GetString().c_str());
 }
 
 int main() {

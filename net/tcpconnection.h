@@ -4,6 +4,7 @@
 
 #include <memory>
 
+#include "utility/buffer.h"
 #include "net/inetaddr.h"
 #include "callback.h"
 
@@ -26,6 +27,10 @@ public:
     const InetAddr & get_addr() { return addr_; }
     bool is_connected() const { return state_ == CONNECTED; }
 
+    void Send(const std::string &str);
+
+    void ShutDown();
+
     // 用户与 TCPServer 都可以设置 CallBack
     void set_connection_call_back(const ConnectionCallback &cb)
     { connection_call_back_ = cb; }
@@ -40,13 +45,15 @@ public:
     void set_connection_destroyed();
 
 private:
-    enum ConnState {CONNECTING, CONNECTED, DISCONNECTED};
+    enum ConnState {CONNECTING, CONNECTED, DISCONNECTING, DISCONNECTED};
 
     void set_state(ConnState cs) { state_ = cs; }
     void HandleRead();
     void HandleWrite();
     void HandleError();
     void HandleClose();
+    void SendInLoop(const std::string &str);
+    void ShutDownInLoop();
 
     Dispatcher *dispatcher_;
     ConnState state_;
@@ -57,6 +64,8 @@ private:
     ConnectionCallback connection_call_back_;
     MessageCallback message_call_back_;
     CloseCallBack close_call_back_;
+    Buffer input_buf_;
+    Buffer output_buf_;
 };
 
 }  // namespace yxalp

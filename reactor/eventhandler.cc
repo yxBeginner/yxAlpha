@@ -20,13 +20,12 @@ EventHandler::EventHandler(int fd, Dispatcher  *dp)
       events_(0),
       revents_(0),
       dispatcher_(dp) {
-    // std::cout << fd << std::endl;
     dispatcher_->RegisterEventHandler(this);  // 是在构造的时候直接注册, 还是手动注册?
 }
 
 EventHandler::~EventHandler() {
     assert(!event_handling_);  // 只有所有回调执行完毕后, 才能析构
-    LOG << "EventHandler::~EventHandler() : "  << fd_;
+    DLOG << "EventHandler::~EventHandler() : "  << fd_;
     // dispatcher_->RemoveEventHandler(this);
 }
 
@@ -37,10 +36,9 @@ void EventHandler::change_interest() {
 void EventHandler::HandleEvent() {
     // HandleEvent 过程中, 整个回调栈中不可以析构本对象
     event_handling_ = true;
-    // std::cout << "HandleEvent" << std::endl;
     // peer 关闭 && 无数据可读
     if ((revents_ & (EPOLLHUP)) && !(revents_ & EPOLLIN )) {
-        LOG << "EventHandler::HandleEvent()  EPoll HUP";
+        DLOG << "EventHandler::HandleEvent()  EPoll HUP";
         if (close_func_) {
             close_func_();
         }
@@ -53,7 +51,6 @@ void EventHandler::HandleEvent() {
     }
     // 可读 | 急迫数据可读(带外数据) | 关闭/半关闭
     if (revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
-        // std::cout << "handle read" << std::endl;
         if (read_func_) {
             read_func_();
         } else {

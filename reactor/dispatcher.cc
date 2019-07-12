@@ -85,7 +85,7 @@ void Dispatcher::Loop() {
     while (!quit_) {
         event_handler_list_.clear();  // C11 释放空间
         selector_->Select(kEpollTimeOut, &event_handler_list_);
-        LOG << "Dispatcher::Loop() : one round epoll" 
+        DLOG << "Dispatcher::Loop() : one round epoll" 
                   << " have active ? " << !event_handler_list_.empty();
         for (auto it = event_handler_list_.cbegin(); it != event_handler_list_.cend(); ++it) {
             // std::cout << "active" << &it << std::endl;

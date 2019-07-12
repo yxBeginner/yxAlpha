@@ -11,17 +11,19 @@ namespace yxalp {
 
 Socket::Socket(Socket && rhs) {
     this->fd_ = rhs.fd_;
+    this->is_valid_ = true;
     rhs.is_valid_ = false;  // 被移动者的 fd 无效
 }
 
 Socket::~Socket() {
+    DLOG << "Socket : ~Socket(): before close fd : " << fd_;
     if (is_valid_) {
         int ret = close(fd_);
         if (ret < 0) {
-            LOG << "Socket : close() : Error";
+            LOG << "Socket : ~Socket() : Error";
         }
     } else {
-        // 无效的 fd
+        DLOG << "Socket : ~Socket(): close fd : " << fd_ << "无效的 fd";
     }
 }
 
@@ -79,6 +81,12 @@ int Socket::Accept(InetAddr &con_addr) {
         con_addr.set_addr(client_addr);
     }
     return connfd;  // TODO 直接做成返回 Socket
+}
+
+void Socket::ShutDownWrite() {
+    if (shutdown(fd_, SHUT_WR) == -1) {
+        LOG << "Socket::ShutDown()";
+    }
 }
 
 void Socket::enable_reuse_addr() {

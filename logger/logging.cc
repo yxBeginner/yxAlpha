@@ -49,7 +49,7 @@ Logger::Logger(const char *file_name, int line)
 // TODO 这样做不能编译成库, 需要动态设定
 Logger::~Logger() {
 #ifdef ENABLE_LOG
-    impl_.stream_ << " -- " << impl_.base_name_.c_str() << ':' << impl_.line_ << '\n';
+    impl_.stream_ << " -- " << impl_.base_name_.c_str() << ':' << impl_.line_ << "\n";
     const LogStream::Buffer &buffer(Stream().get_buffer());
     #ifdef STDLOG
         std::cout << buffer.get_data() << std::endl;

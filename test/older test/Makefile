@@ -1,6 +1,6 @@
 CXXFLAGS = -O0 -g  -Wall -I ../.. -pthread
 LDFLAGS = -lpthread
-BINARIES = test_net_client
+BINARIES = test_net_client pre_test_client
 
 # LIB_SRC = ../net/inetaddr.cc ../net/socket.cc
 all: $(BINARIES)
@@ -13,3 +13,4 @@ clean:
 
 # test_net_server: test_net_server.cc
 test_net_client: test_net_client.cc
+pre_test_client: pre_test_client.cc

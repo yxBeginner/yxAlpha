@@ -24,6 +24,7 @@ public:
     void Listen();
     // 与 accept() 类似, 成功时会返回 socket file descriptor
     int Accept(InetAddr &con_addr);
+    void ShutDownWrite();
     void enable_reuse_addr();
     void disable_reuse_addr();
     // TODO other setsockopt
