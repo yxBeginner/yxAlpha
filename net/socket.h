@@ -27,6 +27,10 @@ public:
     void ShutDownWrite();
     void enable_reuse_addr();
     void disable_reuse_addr();
+    void enable_tcp_nodelay();
+    void disable_tcp_nodelay();
+    void enable_keep_alive();
+    void disable_keep_alive();
     // TODO other setsockopt
     // nodelay ...
 private:

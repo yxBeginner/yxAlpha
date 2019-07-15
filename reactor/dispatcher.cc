@@ -4,6 +4,7 @@
 #include <sys/eventfd.h>
 #include <unistd.h>
 #include <cassert>
+#include <signal.h>
 
 #include "selector.h"
 #include "eventhandler.h"
@@ -20,6 +21,15 @@ static int CreateEventFd() {
     }
     return fd;
 }
+
+class IgnoreSigPipe {
+public:
+    IgnoreSigPipe() {
+        signal(SIGPIPE, SIG_IGN);
+    }
+};
+
+IgnoreSigPipe initObj;
 
 Dispatcher::Dispatcher()
     : looping_(false), 

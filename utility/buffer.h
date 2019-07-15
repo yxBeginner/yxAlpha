@@ -8,6 +8,8 @@
 #include <string>
 #include <cassert>
 
+// |savedSpace|---------------|payload-------|-------------------end|
+// |----------------kBufBegin--read_index_--write_index_--buffer_.size()
 namespace yxalp {
 
 class Buffer {
@@ -43,7 +45,7 @@ public:
 
     // 与 peek() 一起使用
     void move_read_index(size_t len) {
-        assert(len < payload_size());
+        assert(len <= payload_size());
         read_index_ += len;
     }
 
@@ -63,7 +65,7 @@ public:
         if (remain_size() < len) {
             Resize(len);
         }
-        std::copy(data, data+len, raw_begin() + write_index_);
+        std::copy(data, data+len, raw_begin() + write_index_);  // 此处出错
         write_index_ += len;
     }
 

@@ -33,8 +33,8 @@ Dispatcher * DispatchThread::Start() {
 }
 
 void DispatchThread::ThreadFunc() {
-    // std::cout << "call" << std::endl;
-    Dispatcher dispatcher;  // dispatcher 由 IO 线程在其内部构造
+    // dispatcher 与 IO thread 是一对一关系, 由 IO 线程在其内部构造
+    Dispatcher dispatcher;
     {  // 临界区
     MutexLockGuard lock_up(mutex_);
     dispatcher_ = &dispatcher;

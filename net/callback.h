@@ -17,6 +17,8 @@ typedef std::function<void (const TcpConnectionPtr&)> ConnectionCallback;
 typedef std::function<void (const TcpConnectionPtr&, Buffer *buf)> MessageCallback;
 // 对端 close 的回调函数
 typedef std::function<void (const TcpConnectionPtr &)> CloseCallBack;
+typedef std::function<void (const TcpConnectionPtr &)> WriteCompleteCallback;
+typedef std::function<void (const TcpConnectionPtr &, size_t)> HighWaterMarkCallback;
 
 }  // namespace yxalp
 

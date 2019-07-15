@@ -23,6 +23,7 @@ public:
     TcpConnection& operator=(const TcpConnection &) = delete;
     TcpConnection(const TcpConnection &) = delete;
 
+    Dispatcher * get_dispatcher() { return dispatcher_; }
     const std::string & get_name() { return conn_name_; }
     const InetAddr & get_addr() { return addr_; }
     bool is_connected() const { return state_ == CONNECTED; }
@@ -36,12 +37,18 @@ public:
     { connection_call_back_ = cb; }
     void set_message_call_back(const MessageCallback &cb)
     { message_call_back_ = cb; }
+    // 低水位回调
+    void set_write_complete_callback(const WriteCompleteCallback & cb) 
+    { write_complete_callback_ = cb; }
+    // 高水位回调, 只上升沿边触发一次, high_water_mark 为警戒线
+    void set_high_water_mark_callback(const HighWaterMarkCallback &cb, size_t high_water_mark) 
+    { high_water_mark_callback_ = cb; high_water_mark_ = high_water_mark;}
     // 内部使用, 只应该由 server 调用删除
     void set_close_call_back(const CloseCallBack & cb)
     { close_call_back_ = cb; }
     // 连接已建立, 只应该由 server 设置. 会直接设置监听状态, 并回调用户函数
     void set_connection_established();
-    // 连接已断开, 此时TCPServer 与 TcpClient "已经"移除自己持有的对象
+    // 连接已断开, 此时TCPServer 与 TcpClient 必须"已经"移除自己持有的本对象
     void set_connection_destroyed();
 
 private:
@@ -64,6 +71,9 @@ private:
     ConnectionCallback connection_call_back_;
     MessageCallback message_call_back_;
     CloseCallBack close_call_back_;
+    size_t high_water_mark_;
+    WriteCompleteCallback write_complete_callback_;
+    HighWaterMarkCallback high_water_mark_callback_;
     Buffer input_buf_;
     Buffer output_buf_;
 };

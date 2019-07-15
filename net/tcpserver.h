@@ -12,6 +12,7 @@ namespace yxalp {
 
 class Acceptor;
 class Dispatcher;
+class DispatcherPool;
 
 class TcpServer {
 public:
@@ -20,6 +21,11 @@ public:
     TcpServer & operator=(const TcpServer &) = delete;
     TcpServer(const TcpServer &) = delete;
 
+    // num_threads = 0, 将不会创建任何 SubReactor
+    // num_threads = n, 将创建 n 个 SubReactor 线程
+    void SetThreadNum(int num_threads);
+
+    // 必须在 start 之前 Call SetThreadNum.
     void Start();
 
     // 为 server 上的每个连接设置 CallBack, 创建新连接时默认设置.
@@ -27,6 +33,8 @@ public:
     { connection_call_back_ = cb; }
     void set_message_call_back(const MessageCallback &cb) 
     { message_call_back_ = cb; }
+    void set_write_complete_callback(const WriteCompleteCallback &cb)
+    { write_complete_callback_ = cb; }
 
     //TODO setsockopt
 private:
@@ -34,12 +42,15 @@ private:
     void NewConnection(Socket &&sock, const InetAddr &client_addr);
     // 在 TcpConnection 的 HandleClose 中被调用
     void RemoveConnection(const TcpConnectionPtr &conn);
+    void RemoveConnectionInLoop(const TcpConnectionPtr &conn);
 
     const std::string name_;
     Dispatcher * dispatcher_;
     std::unique_ptr<Acceptor> acceptor_;
+    std::unique_ptr<DispatcherPool> dispatcher_pool_;
     ConnectionCallback connection_call_back_;
     MessageCallback message_call_back_;
+    WriteCompleteCallback write_complete_callback_;
     bool started_;
     int conn_id_;
     // Warn: 维护一个所有 Connection 的map, 这与 selector 并不一致, 后者维护的是存活的 fd.

@@ -46,6 +46,7 @@ int main() {
     server.set_connection_call_back(OnConnection);
     server.set_message_call_back(OnMessage);
     server.set_write_complete_callback(OnWriteComplete);
+    server.SetThreadNum(0);
     server.Start();
 
     dispatcher.Loop();

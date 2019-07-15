@@ -21,6 +21,7 @@ TcpConnection::TcpConnection(Dispatcher *dispatcher, Socket &&socket,
       conn_name_(conn_name),
       connection_call_back_(nullptr),
       message_call_back_(nullptr),
+      high_water_mark_(64*1024*1024),
       input_buf_(),
       output_buf_() {
     
@@ -74,15 +75,20 @@ void TcpConnection::Send(const std::string &str) {
 void TcpConnection::SendInLoop(const std::string &str) {
     dispatcher_->AssertInLoopThread();
     ssize_t n = 0;
+    size_t remain = str.size();
     // 尝试直接写
     if (!(event_handler_->is_care_write()) && output_buf_.payload_size() == 0) {
         n = write(event_handler_->fd(),str.data(), str.size());  // TODO writeV
         if (n >= 0) {
+            remain -= static_cast<size_t> (n);  // ok
             if (static_cast<size_t> (n) < str.size()) {
                 DLOG << "TcpConnection::SendInLoop(), fd : " << socket_->fd()
-                << "name : " << conn_name_.c_str() << "There are more data to write";
+                    << "name : " << conn_name_.c_str() << "There are more data to write";
+            } else if (remain == 0 && write_complete_callback_) {
+                dispatcher_->QueueInLoop(
+                                            std::bind(write_complete_callback_, shared_from_this()));
             }
-        } else {
+        }  else {
             n = 0;
             if (errno != EAGAIN) {
                 DLOG << "TcpConnection::SendInLoop(), fd : " << socket_->fd()
@@ -95,14 +101,21 @@ void TcpConnection::SendInLoop(const std::string &str) {
         }
     }
 
-    if (static_cast<size_t> (n) < str.size()) {
-        output_buf_.Append(str.data()+n, str.size()-n);
+    if (remain > 0) {
+        size_t old_len = output_buf_.payload_size();
+        if (old_len + remain >= high_water_mark_ 
+            && old_len < high_water_mark_  // 沿边触发一次
+            && high_water_mark_callback_) {
+                dispatcher_->QueueInLoop(
+                    std::bind(high_water_mark_callback_, shared_from_this(), old_len + remain)
+                );
+            }
+        output_buf_.Append(str.data()+n, remain);
         if (!(event_handler_->is_care_write())) {
             event_handler_->set_care_write();
         }
     }
 }
-
 
 void TcpConnection::set_connection_established() {
     dispatcher_->AssertInLoopThread();  // IO thread
@@ -150,6 +163,10 @@ void TcpConnection::HandleWrite() {
             if (output_buf_.payload_size() == 0) {
                 // buffer 已空, 不在监听写事件, 避免 busy Loop
                 event_handler_->set_stop_care_write();
+                if (write_complete_callback_) {
+                    dispatcher_->QueueInLoop(
+                                            std::bind(write_complete_callback_, shared_from_this()));
+                }
                 if (state_ == DISCONNECTING) {  // 本端 FIN
                     ShutDownInLoop();  // 回调肯定在本线程之内
                 }

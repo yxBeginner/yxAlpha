@@ -33,7 +33,7 @@ ssize_t Buffer::readFd(int fd, int* saved_errno) {
 
 void Buffer::Resize(size_t len) {
     // buffer 内部空间不足
-    if ((read_index_ - kBufBegin + write_index_ < len)) {
+    if ((read_index_ - kBufBegin + remain_size() < len)) {  // fixedbug
         buffer_.resize(write_index_ + len);  // no extra space
     } else {
         // 内部移动

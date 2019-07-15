@@ -3,6 +3,7 @@
 
 #include  <unistd.h>
 #include <errno.h>
+#include <netinet/tcp.h>
 
 #include "inetaddr.h"
 #include "logger/logging.h"
@@ -85,18 +86,44 @@ int Socket::Accept(InetAddr &con_addr) {
 
 void Socket::ShutDownWrite() {
     if (shutdown(fd_, SHUT_WR) == -1) {
-        LOG << "Socket::ShutDown()";
+        LOG << "Socket::ShutDown() : Error";
     }
 }
 
 void Socket::enable_reuse_addr() {
-    int val = 1;  // 1 s
+    int val = 1;  // s
     setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &val, sizeof (val));  // |SO_REUSEPORT
 }
 // 需要验证.
 void Socket::disable_reuse_addr() {
     int val = 0;
     setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &val, sizeof (val));  // |SO_REUSEPORT
+}
+
+void Socket::enable_tcp_nodelay() {
+    int val = 1;
+    setsockopt(fd_, IPPROTO_IP, TCP_NODELAY, &val, sizeof (val));
+}
+
+void Socket::disable_tcp_nodelay() {
+    int val = 0;
+    setsockopt(fd_, IPPROTO_IP, TCP_NODELAY, &val, sizeof (val));
+}
+
+void Socket::enable_keep_alive() {
+    int val = 1;
+    int ret = setsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof (val));
+    if (ret < 0) {  // TODO better
+        LOG << "Socket::enable_keep_alive() : Error";
+    }
+}
+
+void Socket::disable_keep_alive() {
+    int val = 0;
+    int ret = setsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof (val));
+    if (ret < 0) {  // TODO better
+        LOG << "Socket::disable_keep_alive() : Error";
+    }
 }
 
 }  // yxalp
