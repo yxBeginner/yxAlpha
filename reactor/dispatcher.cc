@@ -12,7 +12,6 @@
 
 namespace yxalp {
 
-// 创建一个 eventfd
 static int CreateEventFd() {
     int fd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     if (fd < 0) {
@@ -45,6 +44,7 @@ Dispatcher::Dispatcher()
     LOG << "Dispatcher::Dispatcher() : Constructor.";
     wakeup_handler_->set_read_func(std::bind(&Dispatcher::HandleRead, this));
     wakeup_handler_->set_care_read();
+
 }
 
 Dispatcher::~Dispatcher() {
@@ -63,7 +63,6 @@ void Dispatcher::Quit() {
 
 void Dispatcher::RegisterEventHandler(EventHandler * ehandler) {
     DLOG << "Dispatcher::RegisterEventHandler : epoll in add : " << ehandler->fd();
-    // std::cout << "epoll in add " << ehandler->events() << std::endl;    
     selector_->UpdataOneEventHandler(Selector::ADD, ehandler);
 }
 
@@ -87,18 +86,17 @@ void Dispatcher::AssertInLoopThread() {
 }
 
 void Dispatcher::Loop() {
-    assert(!looping_);  // Loop 开始
+    assert(!looping_);
     AssertInLoopThread();
     assert(!quit_);
     looping_ = true;
     quit_ = false;
     while (!quit_) {
-        event_handler_list_.clear();  // C11 释放空间
+        event_handler_list_.clear();
         selector_->Select(kEpollTimeOut, &event_handler_list_);
         DLOG << "Dispatcher::Loop() : one round epoll" 
                   << " have active ? " << !event_handler_list_.empty();
         for (auto it = event_handler_list_.cbegin(); it != event_handler_list_.cend(); ++it) {
-            // std::cout << "active" << &it << std::endl;
             (*it)->HandleEvent();
         }
         ExecutePendingFuncs();  // 执行异步用户任务回调

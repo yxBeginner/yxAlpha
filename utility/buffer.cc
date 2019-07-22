@@ -4,6 +4,8 @@
 
 namespace yxalp {
 
+const char * Buffer::CRLF = "\r\n";
+
 Buffer::Buffer()
     : buffer_(kBufBegin + kDefaultSize), 
       read_index_(kBufBegin),

@@ -1,5 +1,4 @@
 // yx
-
 #include "selector.h"
 
 #include <sys/epoll.h>
@@ -126,7 +125,7 @@ void Selector::DeleteEvent(EventHandler * eh) {
 void Selector::ModifyEvent(EventHandler * eh) {
     struct epoll_event e_event;
     bzero(&e_event, sizeof(struct ::epoll_event));
-    int fd = eh->fd();  // 将此项设置为 -1, 可以让 epoll 暂时忽略该 fd 吗? poll 可以.
+    int fd = eh->fd();
     DLOG << "Selector::ModifyEvent : fd : " << fd;
     e_event.data.fd = fd;
     e_event.data.ptr = static_cast<void *> (eh);

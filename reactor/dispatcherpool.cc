@@ -50,4 +50,3 @@ Dispatcher * DispatcherPool::get_next_dispatcher() {
 }
 
 }  // namespace yxalp
-

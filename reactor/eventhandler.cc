@@ -21,6 +21,7 @@ EventHandler::EventHandler(int fd, Dispatcher  *dp)
       revents_(0),
       dispatcher_(dp) {
     dispatcher_->RegisterEventHandler(this);  // 是在构造的时候直接注册, 还是手动注册?
+    
 }
 
 EventHandler::~EventHandler() {

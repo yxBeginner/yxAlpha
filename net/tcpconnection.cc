@@ -72,6 +72,19 @@ void TcpConnection::Send(const std::string &str) {
     }
 }
 
+// TODO efficiency
+void TcpConnection::Send(Buffer *buf) {
+    if (state_ == CONNECTED) {
+        std::string data(buf->peek(), buf->peek() + buf->payload_size());
+        buf->move_read_index_all();
+        if (dispatcher_->is_same_thread()) {
+            SendInLoop(data);
+        } else {
+            dispatcher_->RunInLoop(std::bind(&TcpConnection::SendInLoop, this, data));
+        }
+    }
+}
+
 void TcpConnection::SendInLoop(const std::string &str) {
     dispatcher_->AssertInLoopThread();
     ssize_t n = 0;

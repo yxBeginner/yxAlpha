@@ -3,6 +3,7 @@
 #define YXALPHA_TCPCONNECTION_H_
 
 #include <memory>
+#include <boost/any.hpp>
 
 #include "utility/buffer.h"
 #include "net/inetaddr.h"
@@ -27,8 +28,12 @@ public:
     const std::string & get_name() { return conn_name_; }
     const InetAddr & get_addr() { return addr_; }
     bool is_connected() const { return state_ == CONNECTED; }
+    void set_context(const boost::any &context) { context_ = context; }
+    const boost::any & get_context() const { return context_; }
+    boost::any * get_context_ptr() { return &context_; }
 
     void Send(const std::string &str);
+    void Send(Buffer *buf);
 
     void ShutDown();
 
@@ -76,6 +81,7 @@ private:
     HighWaterMarkCallback high_water_mark_callback_;
     Buffer input_buf_;
     Buffer output_buf_;
+    boost::any context_;
 };
 
 }  // namespace yxalp

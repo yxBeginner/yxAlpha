@@ -8,10 +8,11 @@
 #include <string>
 #include <cassert>
 
-// |savedSpace|---------------|payload-------|-------------------end|
-// |----------------kBufBegin--read_index_--write_index_--buffer_.size()
 namespace yxalp {
 
+// 不要使用 vector<char> 自身的 end(), size(), 不表示实际数据的位置
+// |savedSpace|---------------|payload-------|-------------------end|
+// |----------------kBufBegin--read_index_--write_index_--buffer_.size()
 class Buffer {
 public:
     static const size_t kBufBegin = 8;
@@ -49,15 +50,27 @@ public:
         read_index_ += len;
     }
 
+    void move_read_index_until(const char *end) {
+        assert(end <= begin_write());
+        assert(peek() <= end);
+        move_read_index(end - peek());
+    }
+
     // 与 peek() 一起使用
     void move_read_index_all() {
         read_index_ = write_index_ = kBufBegin;  // 归档
     }
 
-    // 调用后, buffer 中的 payload 无效
+    // 取出 buf 中的 payload, read_index 会移动
     std::string GetString() {
         std::string str(peek(), payload_size());
         move_read_index_all();
+        return str;
+    }
+
+    // 取出 buf 中的 payload, read_index 不会移动
+    std::string GetStringNoMove() {
+        std::string str(peek(), payload_size());
         return str;
     }
 
@@ -79,6 +92,18 @@ public:
     // 从内核中读数据
     ssize_t readFd(int fd, int* saved_errno);
 
+    const char * findCRLF() const {
+        const char * crlf = std::search(peek(), begin_write(), CRLF, CRLF+2);
+        return crlf == begin_write() ? nullptr : crlf;
+    }
+
+    const char * findCRLF(const char * start) const {
+        assert(peek() <= start);
+        assert(start <= begin_write());
+        const char * crlf = std::search(start, begin_write(), CRLF, CRLF+2);
+        return crlf == begin_write() ? nullptr : crlf;
+    }
+
 private:
     // 返回 buffer 中第一个字符的地址, 以使用 memmove()
     char * raw_begin() {
@@ -89,11 +114,20 @@ private:
         return &(buffer_.front());
     }
 
+    const char * begin_write() const {
+        return raw_begin() + write_index_;
+    }
+
+    char * begin_write() {
+        return raw_begin() + write_index_;
+    }
+
     void Resize(size_t len);
 
     std::vector<char> buffer_;
     size_t read_index_;  // for both side
     size_t write_index_;
+    static const char *CRLF;
 };
 
 }  // namespace yxalp

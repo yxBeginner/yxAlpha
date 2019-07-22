@@ -34,9 +34,6 @@ private:
     std::unique_ptr<AppendFile> file_;
 };
 
-
-
-
 }  // namespace yxalp
 
 #endif  // YXALPHA_LOGFILE_H_

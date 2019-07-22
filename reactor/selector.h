@@ -13,7 +13,6 @@ struct epoll_event;
 namespace yxalp {
 
 using std::vector;
-using std::map;
 
 class EventHandler;
 

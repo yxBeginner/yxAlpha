@@ -36,6 +36,7 @@ public:
     void set_write_complete_callback(const WriteCompleteCallback &cb)
     { write_complete_callback_ = cb; }
 
+    Dispatcher* get_dispatcher() const { return dispatcher_; }
     //TODO setsockopt
 private:
     // 在Acceptor::EventHandlerCallBack() 中被回调, 也即 accept 新连接时.

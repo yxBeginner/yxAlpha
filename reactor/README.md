@@ -10,11 +10,11 @@ non-blocking IO + IO multipleing
 ## Component
 
 ### Event Handler
-事件处理器，其会定义一些回调方法 (钩子函数)，当所管理的 fd 上有事件发生时，回调方法便会执行(由 Dispatcher 回调)，一种事件处理机制.
+事件处理器. EventHandler 会定义一些回调方法 (钩子函数)，当所管理的 fd 上有事件发生时，回调方法便会执行(由 Dispatcher 回调)，一种事件处理机制.
 * EventHandler 定义事件处理方法 HandleEvent()，以供 Dispatcher 回调使用。经由若干 set 方法设置客端回调, 并可改变监听状态 (一个 Channel).
 * 每个 EventHandler 只隶属于一个 IO 线程, 非跨线程. 并且不管理 fd 的生命周期. 作为 Acceptor/TCPConnection/Dispatcher 的成员.
-* EventHanlder 不用于派生 Concrete EventHandler, 而是通过设置回调函数的方式提供多态, 这是基于对象风格?
-* 构造 EventHandler 后, 需要注册调用者的Dispatcher, 以便 EventHandler 到 相应的 Dispatcher 上改变自己关心的事件. 考虑到 Dispatcher 不会正常退出, 那么这个引用是安全的.
+* EventHanlder 不用于派生 Concrete EventHandler, 而是通过设置回调函数的方式提供类多态, 基于对象风格.
+* 构造 EventHandler 后, 需要注册调用者的Dispatcher, 以便 EventHandler 到相应的 Dispatcher 上改变自己关心的事件. 考虑到 Dispatcher 不会正常退出, 那么这个引用是安全的.
 
 ### Selector
 所谓的 Synchronous Event Demultiplexer, 也即 IO multiplexing 的核心, 内部使用 epoll LT 实现. 与 Dispatcher 为一对一的关系.
@@ -29,7 +29,6 @@ non-blocking IO + IO multipleing
 遵循 one Loop per thread, 每个线程只有一个 Dispatcher (EventLoop in Muduo), 一个 Dispatcher 也只属于一个线程. 跨线程的客端函数执行经由 Dispatcher 的接口进行, RunInLoop() / QueueInLoop(). 这个二者是一个任务队列, 前者对后者进行了封装, 跨线程调用时由内部互斥锁保护, 并经由 eventfd 异步唤醒. 内部具体的队列在本 Dispatcher 处理回调函数时直接与局部队列 swap, 缩小临界区.
 
 ## Design
-
 使用 epoll_event.data.ptr 指示该 fd 所处于的 EventHandler, 整个 Reactor 结构中没有维护任何存活的 EventHandler 与 文件描述符的数据, 皆由Kernel 处理. (ps. TcpServer 中维护了 EventHandler 的列表)
 
 ## Epoll 返回状态的处理

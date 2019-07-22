@@ -29,7 +29,7 @@ void AsyncLogging::Append(const char* logline, size_t len) {
     if (current_buffer_->available() > len) {
         current_buffer_->Append(logline, len);
     } else {  // 当前 buffer 写满
-        buffers_.push_back(std::move(current_buffer_));  // 放到队列中
+        buffers_.push_back(std::move(current_buffer_));
         if (next_buffer_) {  // 有备用 buffer
             current_buffer_ = std::move(next_buffer_);
         } else {  // 分配新 buffer
@@ -60,7 +60,7 @@ void AsyncLogging::ThreadFunc() {
             if (buffers_.empty())  {  // 只有一个 wait 者
                 cond_.waitForSeconds(flushInterval_);
             }
-                buffers_.push_back(std::move(current_buffer_));
+                buffers_.push_back(std::move(current_buffer_));  // 将当前前端写的buffer放到队列中
                 current_buffer_ = std::move(new_buffer_1);  // 移用空 buffer
                 buffers_to_write.swap(buffers_);
             if (!next_buffer_) {

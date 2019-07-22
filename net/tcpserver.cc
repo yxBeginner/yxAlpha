@@ -25,7 +25,6 @@ TcpServer::TcpServer(Dispatcher *dispatcher, const InetAddr &server_addr)
           acceptor_->set_new_connection_callback(
               std::bind(&TcpServer::NewConnection, this, 
                                   std::placeholders::_1, std::placeholders:: _2));
-
 }
 
 TcpServer::~TcpServer() {
@@ -57,7 +56,7 @@ void TcpServer::NewConnection(Socket &&sock, const InetAddr &client_addr) {
     std::string conn_name = name_ + std::to_string(conn_id_);
     LOG << "TcpServer::NewConnection() [" << name_.c_str()  << "] - new connection ["
               << conn_name.c_str() << "] ip:port " << client_addr.get_iner_host_port().c_str();
-    Dispatcher *next_io = dispatcher_pool_->get_next_dispatcher();    
+    Dispatcher *next_io = dispatcher_pool_->get_next_dispatcher();  // Round
     TcpConnectionPtr conn = std::make_shared<TcpConnection> (next_io, 
                                                          std::move(sock), client_addr, conn_name);  // hold 1
     connections_.insert(std::pair<std::string, TcpConnectionPtr> (conn_name, conn));  // hold 1
