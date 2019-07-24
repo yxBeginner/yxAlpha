@@ -27,7 +27,7 @@ void OnRequest(const HttpRequest& req, HttpResponse* resp) {
 		resp->set_content_type("text/html");
 		resp->add_header(std::string("Server"), std::string("Yxalp"));
 		// string now = Timestamp::now().toFormattedString();
-		resp->set_body("<html><head><title>This is title</title></head>"
+		resp->set_body("<html><head><title>Yxalp</title></head>"
 			"<body><h1>Hello</h1></body></html>");
 	}
 	else if (req.get_path() == "/favicon.ico") {

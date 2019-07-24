@@ -24,13 +24,13 @@ public:
     Selector & operator=(const Selector &) = delete;
     Selector(const Selector &) = delete;
 
-    void Select(int timeout, vector<EventHandler*> *handlers);
+    void Select(int timeout);
 
     // 可用 ADD, DEL, MOD, 但是不可以使用并集 
     void UpdataOneEventHandler(int option, EventHandler * ehandler);
     
 private:
-    void UpdataTriggeredEventHandlers(int , vector<EventHandler*> *);
+    void UpdataTriggeredEventHandlers(int);
     void AddEvent(EventHandler * eh);
     void DeleteEvent(EventHandler * eh);
     void ModifyEvent( EventHandler * eh);

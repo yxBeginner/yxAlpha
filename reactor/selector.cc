@@ -28,11 +28,12 @@ static void epoll_err (int err) {
         switch (err) {
         case EINTR:
             break;
-        case EINVAL:
+        case EINVAL: {
             LOG << "Selector::Select : epoll_wait error : epfd is not an epoll file descriptor, "
                             "or maxevents is less than or equal to zero.";
             abort();
             break;
+        }
         case EFAULT:  // TODO
             break;
         case EBADF:
@@ -43,14 +44,14 @@ static void epoll_err (int err) {
         }
 }
 
-void Selector::Select(int timeout, vector<EventHandler*> *handlers) {
+void Selector::Select(int timeout) {
     int ret = epoll_wait(epollfd_, e_events_.data(), static_cast<int>(e_events_.size()), timeout);
     DLOG << "Selector::Select () : active nums : " << ret;
     if (ret > 0) {  // triggered
-        if (static_cast<size_t> (ret) == e_events_.size()) {  // TODO 缩小动作
+        if (static_cast<size_t> (ret) == e_events_.size()) {
             e_events_.resize(e_events_.size() * 2);  // 这种扩容方法在水平触发下才可以
         }
-        UpdataTriggeredEventHandlers(ret, handlers);
+        UpdataTriggeredEventHandlers(ret);
     } else if (ret == -1) {
         epoll_err(errno);  // other
     } else {
@@ -58,21 +59,17 @@ void Selector::Select(int timeout, vector<EventHandler*> *handlers) {
     }
 }
 
-void Selector::UpdataTriggeredEventHandlers(int nums, vector<EventHandler*> *handlers) {
+void Selector::UpdataTriggeredEventHandlers(int nums) {
     assert(static_cast<size_t> (nums) <= e_events_.size());
-    EventHandler * tmp = nullptr;
-    handlers->resize(nums);
+    EventHandler * eh = nullptr;
     for (int i = 0; i < nums; ++i) {
-        tmp = static_cast<EventHandler *> (e_events_[i].data.ptr);
-        tmp->set_revents(e_events_[i].events);
-        // Q: 选择在 Selector 中直接处理 EventHandler 的 HandEvent() ?
-        handlers->at(i) = tmp;  // 反馈至 Dispatcher, 由后者调用回调函数
-        // same as (*handlers)[i] = tmp;
+        eh = static_cast<EventHandler *> (e_events_[i].data.ptr);
+        eh->set_revents(e_events_[i].events);
+        eh->HandleEvent();
     }
 }
 
 void Selector::UpdataOneEventHandler(int option, EventHandler * ehandler) {
-    // assert(option == (ADD||DEL||MOD));
     assert(ehandler != nullptr);
     switch (option) {
     case ADD:
@@ -85,7 +82,7 @@ void Selector::UpdataOneEventHandler(int option, EventHandler * ehandler) {
         ModifyEvent(ehandler);
         break;
     default:
-        // LOG error option
+            LOG << "Selector::UpdataOneEventHandler() : error option" ;
         break;
     }
 }
@@ -96,11 +93,8 @@ void Selector::AddEvent(EventHandler * eh) {
     int fd = eh->fd();
     DLOG << "Selector::AddEvent : fd : " << fd;
     e_event.data.fd = fd;
-    e_event.data.ptr = static_cast<void *> (eh);  // 使用 ptr 保存其所在 EventHandler
+    e_event.data.ptr = static_cast<void *> (eh);
     e_event.events = eh->events();
-    // std::cout << "epoll in add " << e_event.data.fd<< std::endl;
-    // std::cout << "epoll in add " << e_event.data.ptr << std::endl;    
-    // std::cout << "epoll in add " << e_event.events << std::endl;    
     int ret = epoll_ctl(epollfd_, EPOLL_CTL_ADD, fd, &e_event);  // 也许可以把普通的 read update 直接合并到一起
     if (ret < 0) {
         LOG << "Selector::AddEvent : error in add " << ret;
@@ -121,7 +115,6 @@ void Selector::DeleteEvent(EventHandler * eh) {
     }
 }
 
-// TODO if care nothing, 应当将 fd 设置为 -fd-1, 否则改变回来
 void Selector::ModifyEvent(EventHandler * eh) {
     struct epoll_event e_event;
     bzero(&e_event, sizeof(struct ::epoll_event));

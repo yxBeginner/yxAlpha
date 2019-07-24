@@ -1,4 +1,4 @@
 notes/
-./yxAlpha.code-workspace
+yxAlpha.code-workspace
 utility/test_buffer.cc
-utility/empty.cc
+utility/empty.h

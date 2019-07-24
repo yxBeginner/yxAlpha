@@ -30,21 +30,26 @@ public:
 
 IgnoreSigPipe initObj;
 
+__thread Dispatcher * this_dispatcher = nullptr;  // 每个线程初始化一次且仅一次
+
 Dispatcher::Dispatcher()
     : looping_(false), 
       quit_(false),
       tid_(CureentThread::tid()),
       selector_(std::make_unique<Selector>()),
-      event_handler_list_(),
       wakeup_fd_(CreateEventFd()),
       in_calling_pending_funcs_(false),
       wakeup_handler_(std::make_unique<EventHandler> (wakeup_fd_, this)),
       mutex_(),
       pending_funcs_() {
     LOG << "Dispatcher::Dispatcher() : Constructor.";
+    if (this_dispatcher) {
+        abort();
+    } else {
+        this_dispatcher = this;
+    }
     wakeup_handler_->set_read_func(std::bind(&Dispatcher::HandleRead, this));
     wakeup_handler_->set_care_read();
-
 }
 
 Dispatcher::~Dispatcher() {
@@ -79,8 +84,8 @@ void Dispatcher::UpdateEventHandler(EventHandler * ehandler) {
 void Dispatcher::AssertInLoopThread() {
     if (!is_same_thread()) {
         DLOG << "Dispatcher::AssertInLoopThread() : threadId : " << tid_
-                  << " Current thread id : " << CureentThread::tid()
-                  << " with name : " << CureentThread::name();
+            << " Current thread id : " << CureentThread::tid()
+            << " with name : " << CureentThread::name();
         abort();
     }
 }
@@ -92,13 +97,7 @@ void Dispatcher::Loop() {
     looping_ = true;
     quit_ = false;
     while (!quit_) {
-        event_handler_list_.clear();
-        selector_->Select(kEpollTimeOut, &event_handler_list_);
-        DLOG << "Dispatcher::Loop() : one round epoll" 
-                  << " have active ? " << !event_handler_list_.empty();
-        for (auto it = event_handler_list_.cbegin(); it != event_handler_list_.cend(); ++it) {
-            (*it)->HandleEvent();
-        }
+        selector_->Select(kEpollTimeOut);
         ExecutePendingFuncs();  // 执行异步用户任务回调
     }
     LOG << "Dispatcher::Loop() : stop looping in thread id : " << tid_

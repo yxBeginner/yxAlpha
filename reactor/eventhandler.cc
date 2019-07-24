@@ -8,7 +8,7 @@
 namespace yxalp {
 
 // const int EventHandler::kRead = EPOLLIN|EPOLLET;  // edge trigger
-const int EventHandler::kRead = EPOLLIN;  // level trigger
+const int EventHandler::kRead = EPOLLIN | EPOLLPRI;  // level trigger
 const int EventHandler::kWrite = EPOLLOUT;
 
 EventHandler::EventHandler(int fd, Dispatcher  *dp)
@@ -20,8 +20,7 @@ EventHandler::EventHandler(int fd, Dispatcher  *dp)
       events_(0),
       revents_(0),
       dispatcher_(dp) {
-    dispatcher_->RegisterEventHandler(this);  // 是在构造的时候直接注册, 还是手动注册?
-    
+    dispatcher_->RegisterEventHandler(this);
 }
 
 EventHandler::~EventHandler() {

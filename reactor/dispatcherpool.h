@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <memory>
+#include <atomic>
 
 namespace yxalp {
 
@@ -23,7 +24,7 @@ public:
 
 private:
     Dispatcher * base_;
-    bool  started_;
+    std::atomic<bool>  started_;
     int num_threads_;
     int next_;
     std::vector<std::unique_ptr<DispatchThread>> threads_;

@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <atomic>
 
 #include "thread/thread.h"
 #include "thread/mutex.h"
@@ -37,15 +38,14 @@ public:
     void RemoveEventHandler(EventHandler * ehandler);
     void UpdateEventHandler(EventHandler * ehandler);
 
-    // 断言, 用于检查不可跨线程的操作, 失败则 abort
+    // 在需要断言不可跨线程的调用时使用
     void AssertInLoopThread();
 
-    // 防止非法跨线程操作
     bool is_same_thread() const {
         return static_cast<bool> (tid_  == CureentThread::tid());
     }
 
-    bool is_looping() const { return looping_; }
+    const std::atomic_bool & is_looping() const { return looping_; }
 
 private:
     // wakeup_handler 的 read 事件回调
@@ -53,11 +53,10 @@ private:
     void ExecutePendingFuncs();  // 处理
 
     static const int kEpollTimeOut = 1000;
-    bool looping_;
-    bool quit_;  // 正常退出, 跨线程对象, 需要保证原子性
+    std::atomic<bool> looping_;
+    std::atomic<bool> quit_;  // 正常退出, 跨线程对象, 需要保证原子性
     tid_t tid_;  // 创建者/拥有者线程 (一对一)
     std::unique_ptr<Selector> selector_;
-    std::vector<EventHandler *> event_handler_list_;  // 一次激活的 fd
     /* 以下与唤醒本 Dispatcher, 并处理用户添加任务回调相关 */
     int wakeup_fd_;
     bool in_calling_pending_funcs_;  // 表示正在处理用户添加回调函数

@@ -17,17 +17,19 @@ DispatcherPool::DispatcherPool(Dispatcher *base)
 
 DispatcherPool::~DispatcherPool() {
     // SubDispatcher 是 stack 对象
+    // Dispatcher * release by DispatchThread
 }
 
 void DispatcherPool::Start() {
     base_->AssertInLoopThread();
     started_ = true;
     for (int i=0; i < num_threads_; ++i) {
-        threads_.push_back(std::make_unique<DispatchThread> ());
-        dispatchers_.push_back(threads_.back().get()->Start());
-        // DispatchThread *t = new DispatchThread;
-        // threads_.push_back(std::unique_ptr<DispatchThread>(t));
-        // dispatchers_.push_back(t->Start());
+        // new 与 push_back 应当为分离的步骤        
+        // threads_.push_back(std::make_unique<DispatchThread> ());
+        // dispatchers_.push_back(threads_.back().get()->Start());
+        DispatchThread *t = new DispatchThread;
+        threads_.push_back(std::unique_ptr<DispatchThread>(t));
+        dispatchers_.push_back(t->Start());
     }
     DLOG << "DispatcherPool::Start() : nums of threads : " << dispatchers_.size();
 }
@@ -41,10 +43,6 @@ Dispatcher * DispatcherPool::get_next_dispatcher() {
                      << next_;
         dispatcher = dispatchers_[next_];
         next_ = (next_ + 1) % num_threads_;
-        // ++next_;
-        // if (static_cast<size_t> (next_) >= dispatchers_.size()) {
-        //     next_ = 0;
-        // }
     }
     return dispatcher;
 }

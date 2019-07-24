@@ -1,0 +1,4 @@
+0.1.0 
+
+* 优化 Selector 与 Dispatcher 之间传递激活事件方式
+* fix atomic in Reactor
