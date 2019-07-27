@@ -78,7 +78,7 @@ public:
         if (remain_size() < len) {
             Resize(len);
         }
-        std::copy(data, data+len, raw_begin() + write_index_);  // 此处出错
+        std::copy(data, data+len, raw_begin() + write_index_);
         write_index_ += len;
     }
 

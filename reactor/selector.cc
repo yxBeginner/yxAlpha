@@ -8,6 +8,7 @@
 
 #include "logger/logging.h"
 #include "eventhandler.h"
+#include "time/timestamp.h"
 
 namespace yxalp {
 
@@ -24,29 +25,30 @@ Selector::~Selector() {
 }
 
 static void epoll_err (int err) {
-        LOG << "Selector::Select : log epoll_wait error : " << err;
-        switch (err) {
-        case EINTR:
-            break;
-        case EINVAL: {
-            LOG << "Selector::Select : epoll_wait error : epfd is not an epoll file descriptor, "
-                            "or maxevents is less than or equal to zero.";
-            abort();
-            break;
-        }
-        case EFAULT:  // TODO
-            break;
-        case EBADF:
-            // epfd is not a valid file descriptor.
-            break;
-        default:
-            break;
-        }
+    LOG << "Selector::Select : log epoll_wait error : " << err;
+    switch (err) {
+    case EINTR:
+        break;
+    case EINVAL: {
+        LOG << "Selector::Select : epoll_wait error : epfd is not an epoll file descriptor, "
+            "or maxevents is less than or equal to zero.";
+        abort();
+        break;
+    }
+    case EFAULT:  // TODO
+        break;
+    case EBADF:
+        // epfd is not a valid file descriptor.
+        break;
+    default:
+        break;
+    }
 }
 
-void Selector::Select(int timeout) {
+Timestamp Selector::Select(int timeout) {
     int ret = epoll_wait(epollfd_, e_events_.data(), static_cast<int>(e_events_.size()), timeout);
     DLOG << "Selector::Select () : active nums : " << ret;
+    Timestamp now(Timestamp::now());
     if (ret > 0) {  // triggered
         if (static_cast<size_t> (ret) == e_events_.size()) {
             e_events_.resize(e_events_.size() * 2);  // 这种扩容方法在水平触发下才可以
@@ -57,6 +59,7 @@ void Selector::Select(int timeout) {
     } else {
         DLOG << "Selector::Select() : nothing happened";
     }
+    return now;  // or finish ?
 }
 
 void Selector::UpdataTriggeredEventHandlers(int nums) {
@@ -82,7 +85,7 @@ void Selector::UpdataOneEventHandler(int option, EventHandler * ehandler) {
         ModifyEvent(ehandler);
         break;
     default:
-            LOG << "Selector::UpdataOneEventHandler() : error option" ;
+        LOG << "Selector::UpdataOneEventHandler() : error option" ;
         break;
     }
 }

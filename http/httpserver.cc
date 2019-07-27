@@ -8,15 +8,19 @@
 
 namespace yxalp{
 
+static void response_503(const TcpConnectionPtr& conn);
+
 void DefaultHttpCallBack(const HttpRequest& require, HttpResponse* response) {
     response->set_status_code(HttpResponse::NotFound);
     response->set_status_message("Not Found");
     response->set_close_connection(true);
 }
 
-HttpServer::HttpServer(Dispatcher *disaptcher, const InetAddr &addr) 
+HttpServer::HttpServer(Dispatcher *disaptcher, const InetAddr &addr, int32_t max_conn) 
      : server_(disaptcher, addr),
-       http_call_back_(DefaultHttpCallBack) {
+       http_call_back_(DefaultHttpCallBack),
+       num_conn_(0),
+       max_conn_(max_conn) {
     server_.set_connection_call_back(
         std::bind(&HttpServer::OnConnection, this, std::placeholders::_1));
     server_.set_message_call_back(
@@ -31,7 +35,13 @@ void HttpServer::Start() {
 void HttpServer::OnConnection(const TcpConnectionPtr& conn) {
     DLOG << "HttpServer::OnConnection " << conn->get_name().c_str();
     if (conn->is_connected()) {
-        conn->set_context(HttpContext());
+        conn->set_context(HttpContext());  // set ?
+        ++num_conn_;
+        if (num_conn_ > max_conn_) {
+            response_503(conn);
+        }
+    } else {
+        --num_conn_;
     }
 }
 
@@ -61,9 +71,23 @@ void HttpServer::OnRequest(const TcpConnectionPtr& conn, const HttpRequest& req)
     response.AppendToBuffer(&buf);
     conn->Send(&buf);  // 将buf 中的响应发送给客户端
     //如果非Keep-Alive则直接关掉
-    if (response.close_connection()) {
+    if (response.is_close_connection()) {
         conn->ShutDown();
     }
+}
+
+static void response_503(const TcpConnectionPtr& conn) {
+    HttpResponse response(true);
+    response.set_status_code(HttpResponse::ServiceUnavailable);
+    response.set_status_message("Service Temporary Unavailable");
+    response.set_content_type("text/html");
+    response.add_header(std::string("Server"), std::string("Yxalp"));
+    response.set_body("<html><head><title>Yxalp</title></head>"
+    "<body><h1>Service Temporary Unavailable</h1></body></html>");
+    Buffer buf;
+    response.AppendToBuffer(&buf);
+    conn->Send(&buf);
+    conn->ShutDown();
 }
 
 }  // namespace yxalp

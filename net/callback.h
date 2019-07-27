@@ -10,6 +10,7 @@ namespace yxalp {
 class TcpConnection;
 class Buffer;
 
+typedef std::function<void()> TimerCallBack;
 typedef std::shared_ptr<TcpConnection> TcpConnectionPtr;
 // 收到新 TCP 连接时的回调函数, 参数是建立的连接
 typedef std::function<void (const TcpConnectionPtr&)> ConnectionCallback;

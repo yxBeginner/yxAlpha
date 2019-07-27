@@ -47,7 +47,7 @@ void TcpConnection::ShutDown() {
         state_ = DISCONNECTING;
         // 我们需要到本 Connection 所在的线程去 shutdown
         dispatcher_->RunInLoop(std::bind(
-                                    &TcpConnection::ShutDownInLoop, this));
+                               &TcpConnection::ShutDownInLoop, this));
     }
 }
 
@@ -170,31 +170,30 @@ void TcpConnection::HandleRead() {
 void TcpConnection::HandleWrite() {
     if (event_handler_->is_care_write()) {
         ssize_t n = write(event_handler_->fd(), 
-                                          output_buf_.peek(), output_buf_.payload_size());
+                          output_buf_.peek(), output_buf_.payload_size());
         if (n>0) {
             output_buf_.move_read_index(n);
             if (output_buf_.payload_size() == 0) {
                 // buffer 已空, 不在监听写事件, 避免 busy Loop
                 event_handler_->set_stop_care_write();
                 if (write_complete_callback_) {
-                    dispatcher_->QueueInLoop(
-                                            std::bind(write_complete_callback_, shared_from_this()));
+                    dispatcher_->QueueInLoop(std::bind(write_complete_callback_,
+                                                       shared_from_this()));
                 }
                 if (state_ == DISCONNECTING) {  // 本端 FIN
                     ShutDownInLoop();  // 回调肯定在本线程之内
                 }
             } else {
                 DLOG << "TcpConnection::HandleWrite(), fd : " << socket_->fd()
-                << "name : " << conn_name_.c_str() << "There are more data to write";
+                     << "name : " << conn_name_.c_str() << "There are more data to write";
             }
         } else {
             LOG << "TcpConnection::HandleWrite(), fd : " << socket_->fd()
-            << "name : " << conn_name_.c_str() << "Writing error.";
+                << "name : " << conn_name_.c_str() << "Writing error.";
         }
     } else {
-        // 如果运行到此处是编程逻辑出现错误
         DLOG << "TcpConnection::HandleWrite(), fd : " << socket_->fd()
-                        << "name : " << conn_name_.c_str() << "logic error";
+             << "name : " << conn_name_.c_str() << "logic error";
     }
 }
 
@@ -206,10 +205,10 @@ void TcpConnection::HandleError() {
     if (ret < 0) {
         int err = errno;
         LOG << "TcpConnection::HandleError(), fd : " << socket_->fd() 
-                  << " - SO_ERROR - errno : " << err;
+            << " - SO_ERROR - errno : " << err;
     } else {
         LOG << "TcpConnection::HandleError(), fd : " << socket_->fd()
-                  << " - SO_ERROR -  : " << optval;
+            << " - SO_ERROR -  : " << optval;
     }
 }
 
@@ -217,8 +216,8 @@ void TcpConnection::HandleError() {
 // server 上持有本对象的 shared_ptr
 void TcpConnection::HandleClose() {
     LOG << "TcpConnection::HandleClose(), fd" << socket_->fd()
-              << "name : " << conn_name_.c_str()
-              << " with state: " << state_;
+        << "name : " << conn_name_.c_str()
+        << " with state: " << state_;
     assert(state_ == CONNECTED || state_ == DISCONNECTING);
     // 不在关注任何事件, 执行完 server 的回调之后, 本对象将不复存在
     event_handler_->set_stop_care_all();

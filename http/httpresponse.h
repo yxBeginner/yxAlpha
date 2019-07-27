@@ -8,7 +8,7 @@
 namespace yxalp {
 
 class Buffer;
-
+// 构造响应
 class HttpResponse {
 public:
     enum HttpStatusCode {
@@ -16,7 +16,8 @@ public:
         Ok = 200,
         MovePermanently = 301,
         BadRequest = 400,
-        NotFound = 404
+        NotFound = 404,
+        ServiceUnavailable = 503
     };
 
     explicit HttpResponse(bool close)
@@ -31,7 +32,7 @@ public:
 
     void set_close_connection(bool on) { close_connection_ = on; }
 
-    bool close_connection() const { return close_connection_; }
+    bool is_close_connection() const { return close_connection_; }
 
     void set_content_type(const std::string& content_type) 
     { add_header("Content-Type", content_type); }

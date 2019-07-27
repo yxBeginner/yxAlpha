@@ -61,6 +61,7 @@ int Socket::Accept(InetAddr &con_addr) {
             case EAGAIN:
             case EINTR:
             case EPERM:
+            case EMFILE:
                 break;
             case EBADF:
             case EFAULT:
@@ -81,7 +82,7 @@ int Socket::Accept(InetAddr &con_addr) {
     } else {
         con_addr.set_addr(client_addr);
     }
-    return connfd;  // TODO 直接做成返回 Socket
+    return connfd;
 }
 
 void Socket::ShutDownWrite() {
@@ -94,7 +95,7 @@ void Socket::enable_reuse_addr() {
     int val = 1;  // s
     setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &val, sizeof (val));  // |SO_REUSEPORT
 }
-// 需要验证.
+
 void Socket::disable_reuse_addr() {
     int val = 0;
     setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &val, sizeof (val));  // |SO_REUSEPORT
@@ -115,6 +116,7 @@ void Socket::enable_keep_alive() {
     int ret = setsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof (val));
     if (ret < 0) {  // TODO better
         LOG << "Socket::enable_keep_alive() : Error";
+        abort();
     }
 }
 
@@ -123,6 +125,27 @@ void Socket::disable_keep_alive() {
     int ret = setsockopt(fd_, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof (val));
     if (ret < 0) {  // TODO better
         LOG << "Socket::disable_keep_alive() : Error";
+        abort();
+    }
+}
+
+void Socket::enable_reuse_port() {
+    int val = 1;
+    int ret = setsockopt(fd_, SOL_SOCKET, SO_REUSEPORT, &val, 
+                         static_cast<socklen_t> (sizeof (val)));
+    if (ret < 0) {
+        LOG << "Socket::enable_reuse_port : Error";
+        abort();
+    }
+}
+
+void Socket::disable_reuse_port() {
+    int val = 0;
+    int ret = setsockopt(fd_, SOL_SOCKET, SO_REUSEPORT, &val, 
+                         static_cast<socklen_t> (sizeof (val)));
+    if (ret < 0) {
+        LOG << "Socket::disable_reuse_port : Error";
+        abort();
     }
 }
 

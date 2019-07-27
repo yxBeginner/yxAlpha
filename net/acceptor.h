@@ -31,6 +31,7 @@ private:
     EventHandler event_handler_;
     NewConnectionCallback newConnectionCallback_;
     bool listenning_;
+    int idle_fd_;
 };
 
 }  // namespace yxalp

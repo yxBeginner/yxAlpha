@@ -2,3 +2,8 @@
 
 * 优化 Selector 与 Dispatcher 之间传递激活事件方式
 * fix atomic in Reactor
+
+0.2.0
+* 增加状态码 503, 提供被动与主动处理文件描述符耗尽的方法.
+* 完善时间戳相关代码.
+* fix bug

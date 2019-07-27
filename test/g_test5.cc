@@ -1,4 +1,3 @@
-// 一个 echo server
 #include "../net/tcpserver.h"
 #include "../reactor/dispatcher.h"
 #include "../net/inetaddr.h"

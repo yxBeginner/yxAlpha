@@ -11,5 +11,9 @@
 * [time](./time) 时间戳相关组件, 暂未完成.
 * [utility](./utility) 额外的功能部件.
 
+## 开发平台
+OS: Ubuntu 16.04 xenial
+Kernel: x86_64 Linux 4.15.0-36-generic
+
 *******
  There is still a long way to go.

@@ -15,6 +15,7 @@ namespace yxalp {
 using std::vector;
 
 class EventHandler;
+class Timestamp;
 
 class Selector {
 public:
@@ -24,7 +25,7 @@ public:
     Selector & operator=(const Selector &) = delete;
     Selector(const Selector &) = delete;
 
-    void Select(int timeout);
+    Timestamp Select(int timeout);
 
     // 可用 ADD, DEL, MOD, 但是不可以使用并集 
     void UpdataOneEventHandler(int option, EventHandler * ehandler);

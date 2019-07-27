@@ -29,21 +29,18 @@ void OnRequest(const HttpRequest& req, HttpResponse* resp) {
 		// string now = Timestamp::now().toFormattedString();
 		resp->set_body("<html><head><title>Yxalp</title></head>"
 			"<body><h1>Hello</h1></body></html>");
-	}
-	else if (req.get_path() == "/favicon.ico") {
+	} else if (req.get_path() == "/favicon.ico") {
 		resp->set_status_code(HttpResponse::Ok);
 		resp->set_status_message("OK");
 		resp->set_content_type("image/png");
 		resp->set_body(std::string(favicon, sizeof favicon));
-	}
-	else if (req.get_path() == "/hello") {
+	} else if (req.get_path() == "/hello") {
 		resp->set_status_code(HttpResponse::Ok);
 		resp->set_status_message("OK");
 		resp->set_content_type("text/plain");
-		resp->add_header("Server", "Muduo");
+		resp->add_header("Server", "Yxalp");
 		resp->set_body("hello, world!\n");
-	}
-	else {
+	} else {
 		resp->set_status_code(HttpResponse::NotFound);
 		resp->set_status_message("Not Found");
 		resp->set_close_connection(true);
@@ -51,13 +48,13 @@ void OnRequest(const HttpRequest& req, HttpResponse* resp) {
 }
 
 int main(int argc, char* argv[]) {
-	int numThreads = 0;
+	int numThreads = 4;
 	if (argc > 1) {
 		benchmark = true;
 		numThreads = atoi(argv[1]);
 	}
 	Dispatcher dispatcher;
-	HttpServer server(&dispatcher, InetAddr(12345));
+	HttpServer server(&dispatcher, InetAddr(12345), 10000);
 	server.set_call_back(OnRequest);
 	server.SetThreadNum(numThreads);
 	server.Start();

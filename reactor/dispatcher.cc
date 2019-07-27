@@ -8,6 +8,7 @@
 
 #include "selector.h"
 #include "eventhandler.h"
+#include "time/timestamp.h"
 #include "logger/logging.h"
 
 namespace yxalp {
@@ -150,13 +151,11 @@ void Dispatcher::HandleRead() {
 void Dispatcher::ExecutePendingFuncs() {
     std::vector<std::function<void()> > local_pending_funcs;
     in_calling_pending_funcs_ = true;  // Atomic
-    // swap, 减小临界区
     {  // 临界区
         MutexLockGuard lock_up(mutex_);
         local_pending_funcs.swap(pending_funcs_);
     }  // 临界区
-    // swap, 在交换后的 functors 上遍历, 否则, 用户回调中调用了 QueueInLoop
-    // 将导致重复上锁.
+    // swap, 在交换后的 functors 上遍历, 否则, 客端回调中调用了 QueueInLoop 将导致重复上锁.
     for (auto &func : local_pending_funcs) {
         func();
     }

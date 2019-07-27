@@ -73,22 +73,20 @@ void TcpServer::NewConnection(Socket &&sock, const InetAddr &client_addr) {
 
 void TcpServer::RemoveConnection(const TcpConnectionPtr &conn) {
     // TcpConnection 会在自己所在的 io thread 回调本函数, 需要转移到 server thread
-    dispatcher_->RunInLoop(
-                                std::bind(&TcpServer::RemoveConnectionInLoop, this, conn));
+    dispatcher_->RunInLoop(std::bind(&TcpServer::RemoveConnectionInLoop, this, conn));
 }
 
 void TcpServer::RemoveConnectionInLoop(const TcpConnectionPtr &conn) {
     dispatcher_->AssertInLoopThread();
     const std::string &conn_name = conn->get_name();
     LOG << "TcpServer::RemoveConnection [" << name_.c_str()  << "] - new connection ["
-              << conn_name.c_str() << "] ip:port " << conn->get_addr().get_iner_host_port().c_str();
+        << conn_name.c_str() << "] ip:port " << conn->get_addr().get_iner_host_port().c_str();
     size_t ret = connections_.erase(conn_name);
     assert(ret == 1);
-    // 最后此处的 bind, 
+    // 最后此处的 bind, 会再一次延长 ptr 的生命期
     // 返回到 TcpConnection 所在的线程去进行销毁
     Dispatcher * io_disp = conn->get_dispatcher();
-    io_disp->QueueInLoop(
-                        std::bind(&TcpConnection::set_connection_destroyed, conn));
+    io_disp->QueueInLoop(std::bind(&TcpConnection::set_connection_destroyed, conn));
 }
 
 }  // namespace yxalp 

@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "inetaddr.h"
 #include "logger/logging.h"
@@ -13,7 +14,7 @@ namespace yxalp {
 static int CreateServerSocket() {
     // SO_REUSEADDR is optional
     int server_fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 
-                                              IPPROTO_TCP);
+                             IPPROTO_TCP);
     if (server_fd < 0) {
         LOG << "CreateServerSocket() : Error in creating server socket.";
         abort();
@@ -24,8 +25,12 @@ static int CreateServerSocket() {
 Acceptor::Acceptor(Dispatcher *dispatcher, const InetAddr &addr)
     : dispatcher_(dispatcher),
       server_socket_(CreateServerSocket()),
-      event_handler_(server_socket_.fd(), dispatcher_) {
-    // server_socket_.enable_reuse_addr();
+      event_handler_(server_socket_.fd(), dispatcher_),
+      listenning_(false),
+      idle_fd_(open("/dev/null", O_RDONLY | O_CLOEXEC)) {
+    server_socket_.enable_reuse_addr();
+    server_socket_.enable_tcp_nodelay();
+    server_socket_.enable_keep_alive();
     server_socket_.Bind(addr);
     event_handler_.set_read_func(std::bind(&Acceptor::EventHandlerCallBack, this));
     DLOG << "Acceptor::Acceptor() : Constructor";
@@ -49,10 +54,18 @@ void Acceptor::EventHandlerCallBack() {
         if (newConnectionCallback_) {
             // newConnectionCallback_(connfd, client_addr);
             DLOG << "Acceptor::EventHandlerCallBack()";
-            newConnectionCallback_(std::move(sock), client_addr);  // 局部 Socket 对象失效
+            newConnectionCallback_(std::move(sock), client_addr);
         } else {
-            LOG << "Acceptor::EventHandlerCallBack() : accept socket fd < 0";
+            // unlikely
             close(connfd);
+        }
+    } else {
+        LOG << "Acceptor::EventHandlerCallBack() : accept socket fd < 0";
+        if (errno == EMFILE) {
+            close(idle_fd_);
+            idle_fd_ = accept(server_socket_.fd(), NULL, NULL);
+            close(idle_fd_);
+            idle_fd_ = open("/dev/null", O_RDONLY | O_CLOEXEC);
         }
     }
 }

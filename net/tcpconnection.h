@@ -34,7 +34,7 @@ public:
 
     void Send(const std::string &str);
     void Send(Buffer *buf);
-
+    // 在写完所有数据之后, 就会关闭写端
     void ShutDown();
 
     // 用户与 TCPServer 都可以设置 CallBack
