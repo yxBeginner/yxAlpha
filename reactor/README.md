@@ -1,10 +1,8 @@
 # Reactor
 
-non-blocking IO + IO multipleing
+结构主体是事件循环, 由事件驱动(epoll), 执行事件回调.
 
-基本结构为一个事件循环, 事件驱动/ 事件回调
-
-> 基于事件编程: 程序主体是被动的等待事件发生, 事件发生后网络库会回调事先注册的事件处理函数(Event Handler).
+> 基于事件编程: non-blocking IO + IO multipleing, 程序主体是被动的等待事件发生, 事件发生后网络库会回调事先注册的事件处理函数(Event Handler).
 
 ## Component
 
@@ -24,10 +22,14 @@ non-blocking IO + IO multipleing
 分发器，整个 Reactor 结构的交汇处，提供了注册、删除与转发EventHandler的方法。
 实际实现中, EventHandler 提供了单独的接口, 它记录自身的状态, Dispatcher 中只持有 Selector 返回的激活事件列表, 并逐一处理 Handler 上的事件.
 
-以下与 Reactor 模型无关:
-遵循 one Loop per thread, 每个线程只有一个 Dispatcher (EventLoop in Muduo), 一个 Dispatcher 也只属于一个线程. 跨线程的客端函数执行经由 Dispatcher 的接口进行, RunInLoop() / QueueInLoop(). 这个二者是一个任务队列, 前者对后者进行了封装, 跨线程调用时由内部互斥锁保护, 并经由 eventfd 异步唤醒. 内部具体的队列在本 Dispatcher 处理回调函数时直接与局部队列 swap, 缩小临界区.
+## 说两句
+Reactor 模式是在单线程/进程下并发度吞吐量最佳的模式之一, 当然也可以扩展成为多线程模式工作. IO, 连接的建立/接收 都可以非阻塞的进行, 非常适用于IO密集型的应用. Lighttpd, ACE, NIO, libevent, Redis 都实现了这一模式.
+
+缺点也有, 这种风格编写程序, 首先不能出现阻塞的任务, 否则结构主体与其他任务会饥饿. 而且不是很适合有复杂逻辑的上层应用, 一般连接建立, 收发数据等都要写在不同的回调函数中, 存在着很严重的割裂逻辑问题. 不适合计算任务重的业务, 因为耗时+IO少, 更适合使用额外的线程单独处理计算, 而不是在 Reactor 中处理.
 
 ## Design
+遵循 one Loop per thread, 每个线程只有一个 Dispatcher (EventLoop in Muduo), 一个 Dispatcher 也只属于一个线程. 跨线程的客端函数执行经由 Dispatcher 的接口进行, RunInLoop() / QueueInLoop(). 这个二者是一个任务队列, 前者对后者进行了封装, 跨线程调用时由内部互斥锁保护, 并经由 eventfd 异步唤醒. 内部具体的队列在本 Dispatcher 处理回调函数时直接与局部队列 swap, 缩小临界区.
+
 使用 epoll_event.data.ptr 指示该 fd 所处于的 EventHandler, 整个 Reactor 结构中没有维护任何存活的 EventHandler 与 文件描述符的数据, 皆由Kernel 处理. (ps. TcpServer 中维护了 EventHandler 的列表)
 
 ## Epoll 返回状态的处理

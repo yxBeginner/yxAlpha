@@ -7,6 +7,7 @@
 #include <sys/time.h>
 
 #include "asynclogging.h"
+#include "time/timestamp.h"
 
 namespace yxalp {
 
@@ -26,10 +27,11 @@ Logger::Impl::Impl(const char *fileName, int line)
     : stream_(),
       line_(line),
       base_name_(fileName) {
+    stream_ << Timestamp(Timestamp::now()).ToFormattedString().c_str() << " ";
     // FormatTime();  // 向 stream 中输出时间信息.
 }
 
-// TODO 目前的实现方式, 反复陷入内核, 及其耗时
+// TODO 目前的实现方式, 反复陷入内核, 及其耗时(目前使用了 Timestamp)
 void Logger::Impl::FormatTime() {
     struct timeval tv;
     time_t time;
@@ -46,7 +48,6 @@ Logger::Logger(const char *file_name, int line)
 
 }
 
-// TODO 这样做不能编译成库, 需要动态设定
 Logger::~Logger() {
 #ifdef ENABLE_LOG
     impl_.stream_ << " -- " << impl_.base_name_.c_str() << ':' << impl_.line_ << "\n";

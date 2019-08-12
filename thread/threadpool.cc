@@ -34,7 +34,7 @@ void ThreadPool::Start(int num_threads) {
     for (int i = 0; i < num_threads; ++i) {
         std::string thread_name = name_ + std::to_string(i+1);
         worker_threads_[i] = std::make_unique<Thread> (
-                                   std::bind(&ThreadPool::RunTask, this), thread_name);
+            std::bind(&ThreadPool::RunTask, this), thread_name);
         worker_threads_[i]->Start();
         // LOG >> "name_ start";
     }
@@ -71,7 +71,7 @@ ThreadPool::Task ThreadPool::PopTask() {
     while (queue_.empty() && running_) {
         cond_empty_.wait();  // 两种唤醒方式, 需要区别对待
     }
-    // assert(!queue_.empty());
+
     Task task;
     if (!queue_.empty()) {
         task = queue_.front();
@@ -88,7 +88,7 @@ ThreadPool::Task ThreadPool::PopTask() {
 void ThreadPool::RunTask() {
     // TODO try catch
     while (running_) {
-        Task p1 = nullptr;
+        // Task p1 = nullptr;
         Task task(PopTask());  // function 对象
         if (task) {  // 有可能传递过来空任务
             task();

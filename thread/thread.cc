@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <errno.h>
-#include <cassert>  // assert.h 报错?
+#include <cassert>
 
 namespace yxalp {
 
@@ -20,9 +20,9 @@ tid_t tid() {
 
 const char * name() {
     return t_name;
-}  // namespace CureentThread
-
 }
+
+}  // namespace CureentThread
 
 // 线程属性结构体, 在线程启动时, 设置本线程相应的属性
 struct ThreadData {
@@ -41,12 +41,12 @@ struct ThreadData {
         // CureentThread::t_tid = *tid_;  // TODO 不妥
         CureentThread::t_tid = (static_cast<tid_t> (pthread_self()));
         CureentThread::t_name = name_.c_str();
-        func_();  // 回调
+        func_();
     }
 };  // struct ThreadData
 
 // 线程入口函数, 执行客户定义的 function
-void * startRoutine(void * arg) {
+void * StartRoutine(void * arg) {
     ThreadData *data = static_cast<ThreadData *> (arg);
     data->RunInThread();
     delete data;
@@ -72,20 +72,17 @@ Thread::~Thread() {
 }
 
 void Thread::Start() {
-    // static_assert(!started_);  // 'this' cannot be used in a constant expression
     assert(!started_);
     started_ = true;
     // 此时线程还未启动, thread_t 无效, 直接传递 pthread_t ?
     ThreadData * data = new ThreadData(func_, name_, &tid_);
-    int ret = pthread_create(&thread_id_, NULL, &startRoutine, data);
+    int ret = pthread_create(&thread_id_, NULL, &StartRoutine, data);
     if (ret != 0) {
         started_ = false;
         delete data;
-        // TODO(): log error, log 线程一定要在其它线程之前启动
-        // exit(ret);
+        exit(ret);
     } else {
-        // do something ?
-        // log start
+        // direct log
     }
 }
 

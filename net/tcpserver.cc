@@ -22,9 +22,9 @@ TcpServer::TcpServer(Dispatcher *dispatcher, const InetAddr &server_addr)
       started_(false),
       conn_id_(0),
       connections_() {
-          acceptor_->set_new_connection_callback(
-              std::bind(&TcpServer::NewConnection, this, 
-                                  std::placeholders::_1, std::placeholders:: _2));
+    acceptor_->set_new_connection_callback(
+        std::bind(&TcpServer::NewConnection, this, 
+                  std::placeholders::_1, std::placeholders:: _2));
 }
 
 TcpServer::~TcpServer() {
@@ -54,7 +54,7 @@ void TcpServer::NewConnection(Socket &&sock, const InetAddr &client_addr) {
     dispatcher_->AssertInLoopThread();
     ++conn_id_;
     std::string conn_name = name_ + std::to_string(conn_id_);
-    LOG << "TcpServer::NewConnection() [" << name_.c_str()  << "] - new connection ["
+    LOG << "TcpServer::NewConnection() [" << name_.c_str() << "] - new connection ["
         << conn_name.c_str() << "] ip:port " << client_addr.get_iner_host_port().c_str();
     Dispatcher *next_io = dispatcher_pool_->get_next_dispatcher();  // Round
     TcpConnectionPtr conn = std::make_shared<TcpConnection> (next_io, 

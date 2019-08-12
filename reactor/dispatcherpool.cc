@@ -23,8 +23,7 @@ DispatcherPool::~DispatcherPool() {
 void DispatcherPool::Start() {
     base_->AssertInLoopThread();
     started_ = true;
-    for (int i=0; i < num_threads_; ++i) {
-        // new 与 push_back 应当为分离的步骤        
+    for (int i=0; i < num_threads_; ++i) {  
         // threads_.push_back(std::make_unique<DispatchThread> ());
         // dispatchers_.push_back(threads_.back().get()->Start());
         DispatchThread *t = new DispatchThread;

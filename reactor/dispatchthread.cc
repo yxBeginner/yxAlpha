@@ -15,7 +15,7 @@ DispatchThread::DispatchThread()
       mutex_(),
       cond_(mutex_) {
 
-      }
+}
 
 DispatchThread::~DispatchThread() {
     dispatcher_->Quit();
