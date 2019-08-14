@@ -54,7 +54,6 @@ private:
     WriteCompleteCallback write_complete_callback_;
     bool started_;
     int conn_id_;
-    // Warn: 维护一个所有 Connection 的map, 这与 selector 并不一致, 后者维护的是存活的 fd.
     std::map<std::string, TcpConnectionPtr> connections_;
 };
 

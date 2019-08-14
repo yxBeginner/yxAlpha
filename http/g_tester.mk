@@ -1,4 +1,4 @@
-CXXFLAGS = -O0 -g -std=c++14 -Wall -I .. -pthread
+CXXFLAGS = -O2 -g -std=c++14 -Wall -I .. -pthread
 LDFLAGS = -lpthread
 BASE_SRC = ../logger/logstream.cc ../logger/asynclogging.cc ../logger/fileutil.cc ../logger/logfile.cc \
 ../logger/logging.cc ../thread/thread.cc ../thread/threadpool.cc \

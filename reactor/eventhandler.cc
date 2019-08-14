@@ -49,7 +49,6 @@ void EventHandler::HandleEvent() {
             error_func_();
         } else {}
     }
-    // 可读 | 急迫数据可读(带外数据) | 关闭/半关闭
     if (revents_ & (EPOLLIN | EPOLLPRI | EPOLLRDHUP)) {
         if (read_func_) {
             read_func_();
@@ -57,7 +56,6 @@ void EventHandler::HandleEvent() {
             // log
         }
     }
-    // 写数据不会阻塞
     if (revents_ & EPOLLOUT) {
         if (write_func_) {
             write_func_();
