@@ -32,16 +32,23 @@ void HttpServer::Start() {
     server_.Start();
 }
 
+// void HttpServer::OnConnection(const TcpConnectionPtr& conn) {
+//     DLOG << "HttpServer::OnConnection " << conn->get_name().c_str();
+//     if (conn->is_connected()) {
+//         conn->set_context(HttpContext());  // set ?
+//         ++num_conn_;
+//         if (num_conn_ > max_conn_) {
+//             response_503(conn);
+//         }
+//     } else {
+//         --num_conn_;
+//     }
+// }
+
 void HttpServer::OnConnection(const TcpConnectionPtr& conn) {
     DLOG << "HttpServer::OnConnection " << conn->get_name().c_str();
     if (conn->is_connected()) {
-        conn->set_context(HttpContext());  // set ?
-        ++num_conn_;
-        if (num_conn_ > max_conn_) {
-            response_503(conn);
-        }
-    } else {
-        --num_conn_;
+        conn->set_context(HttpContext());
     }
 }
 

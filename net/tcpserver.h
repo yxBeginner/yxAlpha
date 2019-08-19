@@ -40,7 +40,8 @@ public:
     //TODO setsockopt
 private:
     // 在Acceptor::EventHandlerCallBack() 中被回调, 也即 accept 新连接时.
-    void NewConnection(Socket &&sock, const InetAddr &client_addr);
+    // void NewConnection(Socket &&sock, const InetAddr &client_addr);
+    void NewConnection(int fd, const InetAddr &client_addr);
     // 在 TcpConnection 的 HandleClose 中被调用
     void RemoveConnection(const TcpConnectionPtr &conn);
     void RemoveConnectionInLoop(const TcpConnectionPtr &conn);

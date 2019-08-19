@@ -45,10 +45,11 @@ static void epoll_err (int err) {
     }
 }
 
-Timestamp Selector::Select(int timeout) {
+// Timestamp
+void Selector::Select(int timeout) {
     int ret = epoll_wait(epollfd_, e_events_.data(), static_cast<int>(e_events_.size()), timeout);
     DLOG << "Selector::Select () : active nums : " << ret;
-    Timestamp now(Timestamp::now());
+    // Timestamp now(Timestamp::now());
     if (ret > 0) {  // triggered
         if (static_cast<size_t> (ret) == e_events_.size()) {
             e_events_.resize(e_events_.size() * 2);  // 这种扩容方法在水平触发下才可以
@@ -59,7 +60,7 @@ Timestamp Selector::Select(int timeout) {
     } else {
         DLOG << "Selector::Select() : nothing happened";
     }
-    return now;  // or finish ?
+    // return now;  // or finish ?
 }
 
 void Selector::UpdataTriggeredEventHandlers(int nums) {

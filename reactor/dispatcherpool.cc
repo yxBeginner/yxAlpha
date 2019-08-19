@@ -38,8 +38,7 @@ Dispatcher * DispatcherPool::get_next_dispatcher() {
     Dispatcher * dispatcher = base_;  // in case dispatchers_ is empty
     if (!dispatchers_.empty()) {
         // round-robin
-        DLOG << "DispatcherPool::get_next_dispatcher() : SubDIspatcher Id : " 
-                     << next_;
+        DLOG << "DispatcherPool::get_next_dispatcher() : SubDIspatcher Id : " << next_;
         dispatcher = dispatchers_[next_];
         next_ = (next_ + 1) % num_threads_;
     }

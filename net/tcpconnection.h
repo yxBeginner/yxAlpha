@@ -18,8 +18,9 @@ class Socket;
 // 管理一个"已经建立"的连接
 class TcpConnection : public std::enable_shared_from_this<TcpConnection> {
 public:
-    TcpConnection(Dispatcher *dispatcher, Socket &&socket, 
-                                     const InetAddr &addr, const std::string &conn_name);
+    // TcpConnection(Dispatcher *dispatcher, Socket &&socket, 
+    TcpConnection(Dispatcher *dispatcher, int fd, 
+        const InetAddr &addr, const std::string &conn_name);
     ~TcpConnection();
     TcpConnection& operator=(const TcpConnection &) = delete;
     TcpConnection(const TcpConnection &) = delete;

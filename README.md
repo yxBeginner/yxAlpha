@@ -12,8 +12,10 @@
 * [utility](./utility) 额外部件.
 
 ## 开发平台
-OS: Ubuntu 16.04 xenial
-Kernel: x86_64 Linux 4.15.0-36-generic
+* OS: Ubuntu 16.04 xenial
+* Kernel: x86_64 Linux 4.15.0-36-generic
+* CPU: Intel Core i3-4160 CPU @ 3.6GHz
+* RAM: 7848MiB
 
 *******
  There is still a long way to go.

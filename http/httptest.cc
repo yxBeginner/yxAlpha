@@ -52,6 +52,7 @@ int main(int argc, char* argv[]) {
 		benchmark = true;
 		numThreads = atoi(argv[1]);
 	}
+
 	Dispatcher dispatcher;
 	HttpServer server(&dispatcher, InetAddr(12345), 10000);
 	server.set_call_back(OnRequest);

@@ -16,8 +16,8 @@ namespace yxalp {
 class Buffer {
 public:
     static const size_t kBufBegin = 8;
-    static const size_t kDefaultSize = 8;
-
+    static const size_t kDefaultSize = 256;
+    
     Buffer();
     ~Buffer() = default;
     Buffer(const Buffer&) = default;

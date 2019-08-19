@@ -50,7 +50,7 @@ void TcpServer::Start() {
     }
 }
 
-void TcpServer::NewConnection(Socket &&sock, const InetAddr &client_addr) {
+void TcpServer::NewConnection(int fd, const InetAddr &client_addr) {
     dispatcher_->AssertInLoopThread();
     ++conn_id_;
     std::string conn_name = name_ + std::to_string(conn_id_);
@@ -58,15 +58,14 @@ void TcpServer::NewConnection(Socket &&sock, const InetAddr &client_addr) {
         << conn_name.c_str() << "] ip:port " << client_addr.get_iner_host_port().c_str();
     Dispatcher *next_io = dispatcher_pool_->get_next_dispatcher();  // Round
     TcpConnectionPtr conn = std::make_shared<TcpConnection> (next_io, 
-        std::move(sock), client_addr, conn_name);  // hold 1
+        fd, client_addr, conn_name);  // hold 1
     connections_.insert(std::pair<std::string, TcpConnectionPtr> (conn_name, conn));  // hold 1
     // DLOG << "TcpServer::NewConnection() [" << name_.c_str()  << "] - new connection ["
     //              << conn_name.c_str() << "] holds : " << connections_[conn_name].use_count();
     conn->set_connection_call_back(connection_call_back_);
     conn->set_message_call_back(message_call_back_);
     conn->set_write_complete_callback(write_complete_callback_);
-    conn->set_close_call_back(
-        std::bind(&TcpServer::RemoveConnection, this, std::placeholders::_1));
+    conn->set_close_call_back(std::bind(&TcpServer::RemoveConnection, this, std::placeholders::_1));
     // conn->set_connection_established();
     next_io->RunInLoop(std::bind(&TcpConnection::set_connection_established, conn));
 }  // release 1

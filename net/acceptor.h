@@ -9,8 +9,8 @@ namespace yxalp {
 
 class Acceptor {
 public:
-    // typedef std::function<void (int socket, const InetAddr &)> NewConnectionCallback;
-    typedef std::function<void (Socket &&sock, const InetAddr &)> NewConnectionCallback;
+    typedef std::function<void (int socket, const InetAddr &)> NewConnectionCallback;
+    // typedef std::function<void (Socket &&sock, const InetAddr &)> NewConnectionCallback;
 
     Acceptor(Dispatcher *dispatcher, const InetAddr &addr);
     ~Acceptor();

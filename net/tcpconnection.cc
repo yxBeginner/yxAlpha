@@ -11,11 +11,12 @@
 
 namespace yxalp {
 
-TcpConnection::TcpConnection(Dispatcher *dispatcher, Socket &&socket, 
-                                                                    const InetAddr &addr, const std::string &conn_name)
+TcpConnection::TcpConnection(Dispatcher *dispatcher, int fd, 
+    const InetAddr &addr, const std::string &conn_name)
     : dispatcher_(dispatcher),
       state_(CONNECTING),
-      socket_(std::make_unique<Socket> (std::move(socket))),  // hold on
+    //   socket_(std::make_unique<Socket> (std::move(socket))),  // hold on
+      socket_(std::make_unique<Socket> (fd)),  // hold on
       event_handler_(std::make_unique<EventHandler> (socket_->fd(), dispatcher_)),
       addr_(addr),
       conn_name_(conn_name),
@@ -99,7 +100,7 @@ void TcpConnection::SendInLoop(const std::string &str) {
                     << "name : " << conn_name_.c_str() << "There are more data to write";
             } else if (remain == 0 && write_complete_callback_) {
                 dispatcher_->QueueInLoop(
-                                            std::bind(write_complete_callback_, shared_from_this()));
+                    std::bind(write_complete_callback_, shared_from_this()));
             }
         }  else {
             n = 0;

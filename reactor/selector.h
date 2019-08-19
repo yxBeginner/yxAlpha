@@ -25,7 +25,8 @@ public:
     Selector & operator=(const Selector &) = delete;
     Selector(const Selector &) = delete;
 
-    Timestamp Select(int timeout);
+    // Timestamp Select(int timeout);
+    void Select(int timeout);
 
     // 可用 ADD, DEL, MOD, 但是不可以使用并集 
     void UpdataOneEventHandler(int option, EventHandler * ehandler);
@@ -36,7 +37,7 @@ private:
     void DeleteEvent(EventHandler * eh);
     void ModifyEvent( EventHandler * eh);
 
-    static const int kEEventsSize = 16;
+    static const int kEEventsSize = 128;
 
     int epollfd_;
     vector<epoll_event> e_events_;

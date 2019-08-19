@@ -10,21 +10,28 @@
 
 namespace yxalp {
 
-Socket::Socket(Socket && rhs) {
-    this->fd_ = rhs.fd_;
-    this->is_valid_ = true;
-    rhs.is_valid_ = false;  // 被移动者的 fd 无效
-}
+// Socket::Socket(Socket && rhs) {
+//     this->fd_ = rhs.fd_;
+//     this->is_valid_ = true;
+//     rhs.is_valid_ = false;  // 被移动者的 fd 无效
+// }
+
+// Socket::~Socket() {
+//     DLOG << "Socket : ~Socket(): before close fd : " << fd_;
+//     if (is_valid_) {
+//         int ret = close(fd_);
+//         if (ret < 0) {
+//             LOG << "Socket : ~Socket() : Error";
+//         }
+//     } else {
+//         DLOG << "Socket : ~Socket(): close fd : " << fd_ << "无效的 fd";
+//     }
+// }
 
 Socket::~Socket() {
-    DLOG << "Socket : ~Socket(): before close fd : " << fd_;
-    if (is_valid_) {
-        int ret = close(fd_);
-        if (ret < 0) {
+    int ret = close(fd_);
+    if (ret < 0) {
             LOG << "Socket : ~Socket() : Error";
-        }
-    } else {
-        DLOG << "Socket : ~Socket(): close fd : " << fd_ << "无效的 fd";
     }
 }
 
