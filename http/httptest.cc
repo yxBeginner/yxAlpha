@@ -1,5 +1,6 @@
 #include <iostream>
 #include <map>
+#include <alloca.h>
 
 #include "httpserver.h"
 #include "httprequest.h"

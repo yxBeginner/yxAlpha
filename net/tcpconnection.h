@@ -33,8 +33,14 @@ public:
     const boost::any & get_context() const { return context_; }
     boost::any * get_context_ptr() { return &context_; }
 
+    // 安全, 数据量较高时使用 outoutbuffer 机制, 但数据量过高时, 应当使用高水位回调
     void Send(const std::string &str);
+    // 安全, 数据量较高时使用 outoutbuffer 机制, 但数据量过高时, 应当使用高水位回调
     void Send(Buffer *buf);
+    // 直接将内部的 Buffer 数据发出, 危险操作, 数据量较少时, 可用来避免额外的内存分配操作
+    void FlushOutputBuf();
+    // 危险操作!
+    Buffer * get_output_buffer() { return &output_buf_; }
     // 在写完所有数据之后, 就会关闭写端
     void ShutDown();
 
@@ -65,8 +71,9 @@ private:
     void HandleWrite();
     void HandleError();
     void HandleClose();
-    void SendInLoop(const std::string &str);
+    void SendInLoop(const char * data, size_t len);
     void ShutDownInLoop();
+    void Flush_();
 
     Dispatcher *dispatcher_;
     ConnState state_;

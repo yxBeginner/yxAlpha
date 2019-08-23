@@ -76,8 +76,10 @@ void HttpServer::OnRequest(const TcpConnectionPtr& conn, const HttpRequest& req)
     http_call_back_(req, &response);  // 客户代码设置的回调函数，填充response
     Buffer buf;
     response.AppendToBuffer(&buf);
-    conn->Send(&buf);  // 将buf 中的响应发送给客户端
-    //如果非Keep-Alive则直接关掉
+    conn->Send(&buf);
+    // Buffer * buf = conn->get_output_buffer();
+    // response.AppendToBuffer(buf);
+    // conn->FlushOutputBuf();
     if (response.is_close_connection()) {
         conn->ShutDown();
     }

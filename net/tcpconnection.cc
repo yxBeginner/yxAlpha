@@ -63,39 +63,56 @@ void TcpConnection::ShutDownInLoop() {
 void TcpConnection::Send(const std::string &str) {
     if (state_ == CONNECTED) {
         if (dispatcher_->is_same_thread()) {
-            SendInLoop(str);
+            SendInLoop(str.data(), str.size());
             DLOG << "TcpConnection::Send() : SendInLoop(str);";
         } else {
             // 调用 send 者不在当前线程, 则转由 EventLoop 的线程调用 sendInLoop
-            dispatcher_->RunInLoop(std::bind(&TcpConnection::SendInLoop, this, str));
+            dispatcher_->RunInLoop(std::bind(&TcpConnection::SendInLoop, this, str.data(), str.size()));
             DLOG << "TcpConnection::Send() : RunInLoop";
         }
     }
 }
 
-// TODO efficiency
 void TcpConnection::Send(Buffer *buf) {
     if (state_ == CONNECTED) {
-        std::string data(buf->peek(), buf->peek() + buf->payload_size());
-        buf->move_read_index_all();
         if (dispatcher_->is_same_thread()) {
-            SendInLoop(data);
+            SendInLoop(buf->peek(), buf->payload_size());
+            buf->move_read_index_all();
         } else {
-            dispatcher_->RunInLoop(std::bind(&TcpConnection::SendInLoop, this, data));
+            dispatcher_->QueueInLoop(std::bind(&TcpConnection::SendInLoop, this, buf->peek(), buf->payload_size()));
+            buf->move_read_index_all();  // Q: 这步会在 SendInLoop 之前执行吗? 这里也许是不正确的处理
         }
     }
 }
 
-void TcpConnection::SendInLoop(const std::string &str) {
+// Fix!
+void TcpConnection::FlushOutputBuf() {
+    if (state_ == CONNECTED) {
+        if (dispatcher_->is_same_thread()) {
+            Flush_();
+        } else {
+            dispatcher_->QueueInLoop(std::bind(
+                &TcpConnection::Flush_, this));
+        }
+    }
+}
+
+// Fix!
+void TcpConnection::Flush_() {
+    ssize_t n = write(event_handler_->fd(), output_buf_.peek(), output_buf_.payload_size());
+    output_buf_.move_read_index_all();
+}
+
+void TcpConnection::SendInLoop(const char * data, size_t len) {
     dispatcher_->AssertInLoopThread();
     ssize_t n = 0;
-    size_t remain = str.size();
+    size_t remain = len;
     // 尝试直接写
     if (!(event_handler_->is_care_write()) && output_buf_.payload_size() == 0) {
-        n = write(event_handler_->fd(),str.data(), str.size());  // TODO writeV
+        n = write(event_handler_->fd(), data, len);  // TODO writeV
         if (n >= 0) {
             remain -= static_cast<size_t> (n);  // ok
-            if (static_cast<size_t> (n) < str.size()) {
+            if (static_cast<size_t> (n) < len) {
                 DLOG << "TcpConnection::SendInLoop(), fd : " << socket_->fd()
                     << "name : " << conn_name_.c_str() << "There are more data to write";
             } else if (remain == 0 && write_complete_callback_) {
@@ -124,7 +141,7 @@ void TcpConnection::SendInLoop(const std::string &str) {
                     std::bind(high_water_mark_callback_, shared_from_this(), old_len + remain)
                 );
             }
-        output_buf_.Append(str.data()+n, remain);
+        output_buf_.Append(data+n, remain);
         if (!(event_handler_->is_care_write())) {
             event_handler_->set_care_write();
         }
